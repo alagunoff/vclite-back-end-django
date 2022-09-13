@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
 
     'users.apps.UsersConfig',
-    'news.apps.NewsConfig'
+    'blog.apps.BlogConfig'
 ]
 
 REST_FRAMEWORK = {
