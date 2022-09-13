@@ -13,7 +13,7 @@ def create_auth_token(sender, instance=None, created=False, **kwargs):
 
 
 class UserManager(BaseUserManager):
-    def create_user(self, username: str, first_name: str, password: None = None) -> "User":
+    def create_user(self, username: str, first_name: str, password: None = None) -> 'User':
         user: User = self.model(
             username=username,
             first_name=first_name
@@ -23,7 +23,7 @@ class UserManager(BaseUserManager):
 
         return user
 
-    def create_superuser(self, username: str, first_name: str, password: None = None) -> "User":
+    def create_superuser(self, username: str, first_name: str, password: None = None) -> 'User':
         user = self.create_user(
             username,
             first_name,
@@ -35,16 +35,12 @@ class UserManager(BaseUserManager):
         return user
 
 
-def user_directory_path(instance, filename):
-    return 'user_{0}/{1}'.format(instance.user.id, filename)
-
-
 class User(AbstractBaseUser):
     username = models.CharField(max_length=30, unique=True)
     first_name = models.CharField(max_length=30)
     last_name = models.CharField(max_length=30, blank=True)
-    avatar = models.ImageField(upload_to=user_directory_path, blank=True)
-    creation_date = models.DateField(auto_now_add=True)
+    avatar = models.ImageField(upload_to='images/users', blank=True)
+    creation_date = models.DateTimeField(auto_now_add=True)
     is_admin = models.BooleanField(default=False)
 
     USERNAME_FIELD = 'username'
