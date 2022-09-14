@@ -34,7 +34,7 @@ def index(request: Request) -> Response:
         return Response({'detail': ResponseMessages.credentials_are_required.value}, status=status.HTTP_401_UNAUTHORIZED, headers={'WWW-Authenticate': 'Token'})
 
 
-@api_view([HttpRequestMethods.delete.value, HttpRequestMethods.put.value])
+@api_view([HttpRequestMethods.delete.value, HttpRequestMethods.patch.value])
 @permission_classes([IsAuthenticated, IsRequesterAdmin])
 @parser_classes([JSONParser])
 @renderer_classes([JSONRenderer])

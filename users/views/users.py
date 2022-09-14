@@ -30,7 +30,7 @@ def index(request: Request) -> Response:
     serializer.save()
     token = Token.objects.get(user=serializer.instance)
 
-    return Response({'detail': token.key}, status=status.HTTP_201_CREATED)
+    return Response({'token': token.key}, status=status.HTTP_201_CREATED)
 
 
 @api_view([HttpRequestMethods.delete.value])
