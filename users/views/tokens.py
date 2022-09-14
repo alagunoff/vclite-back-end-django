@@ -4,9 +4,10 @@ from rest_framework.parsers import JSONParser
 from rest_framework.renderers import JSONRenderer
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.exceptions import NotFound
 from rest_framework.authtoken.models import Token
 
-from api.types import HttpRequestMethods, ResponseMessages
+from api.types import HttpRequestMethods
 
 from ..models import User
 
@@ -31,6 +32,6 @@ def index(request: Request) -> Response:
             else:
                 return Response({'detail': 'Password isn\'t correct'}, status=status.HTTP_403_FORBIDDEN)
         except User.DoesNotExist:
-            return Response({'detail': ResponseMessages.there_is_no_such_user.value}, status=status.HTTP_404_NOT_FOUND)
+            raise NotFound()
     else:
         return Response({'detail': 'Fields "username", "password" are required'}, status=status.HTTP_400_BAD_REQUEST)
