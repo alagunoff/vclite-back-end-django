@@ -1,16 +1,18 @@
 from rest_framework import status
-from rest_framework.decorators import api_view, renderer_classes
+from rest_framework.decorators import api_view, parser_classes, renderer_classes
+from rest_framework.parsers import JSONParser
 from rest_framework.renderers import JSONRenderer
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 
-from api.types import HttpRequestMethods, Messages
+from api.types import HttpRequestMethods, ResponseMessages
 
 from ..models import User
 
 
 @api_view([HttpRequestMethods.get.value])
+@parser_classes([JSONParser])
 @renderer_classes([JSONRenderer])
 def index(request: Request) -> Response:
     queried_username = request.query_params.get('username')
@@ -29,6 +31,6 @@ def index(request: Request) -> Response:
             else:
                 return Response({'detail': 'Password isn\'t correct'}, status=status.HTTP_403_FORBIDDEN)
         except User.DoesNotExist:
-            return Response({'detail': Messages.there_is_no_such_user.value}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'detail': ResponseMessages.there_is_no_such_user.value}, status=status.HTTP_404_NOT_FOUND)
     else:
         return Response({'detail': 'Fields "username", "password" are required'}, status=status.HTTP_400_BAD_REQUEST)
