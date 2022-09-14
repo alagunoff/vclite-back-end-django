@@ -29,13 +29,13 @@ def index(request: Request) -> Response:
 
             return Response({'detail': ResponseMessages.success.value}, status=status.HTTP_201_CREATED)
         else:
-            return Response({'detail': 'Only admins are allowed to create categories'}, status=status.HTTP_403_FORBIDDEN)
+            return Response(status=status.HTTP_404_NOT_FOUND)
     else:
         return Response({'detail': ResponseMessages.credentials_are_required.value}, status=status.HTTP_401_UNAUTHORIZED, headers={'WWW-Authenticate': 'Token'})
 
 
 @api_view([HttpRequestMethods.post.value, HttpRequestMethods.delete.value, HttpRequestMethods.patch.value])
-@permission_classes([IsAuthenticated, IsRequesterAdmin])
+@permission_classes([IsRequesterAdmin])
 @parser_classes([JSONParser])
 @renderer_classes([JSONRenderer])
 def detail(request: Request, category_id: int) -> Response:

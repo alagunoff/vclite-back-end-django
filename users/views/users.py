@@ -1,6 +1,5 @@
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes, parser_classes, renderer_classes
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import JSONParser
 from rest_framework.renderers import JSONRenderer
 from rest_framework.request import Request
@@ -34,7 +33,7 @@ def index(request: Request) -> Response:
 
 
 @api_view([HttpRequestMethods.delete.value])
-@permission_classes([IsAuthenticated, IsRequesterAdmin])
+@permission_classes([IsRequesterAdmin])
 @parser_classes([JSONParser])
 @renderer_classes([JSONRenderer])
 def detail(request: Request, username: str) -> Response:
