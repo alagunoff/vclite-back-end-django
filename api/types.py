@@ -6,6 +6,7 @@ class HttpRequestMethods(Enum):
     post = 'POST'
     delete = 'DELETE'
     put = 'PUT'
+    patch = 'PATCH'
 
 
 class ResponseMessages(Enum):
@@ -13,3 +14,4 @@ class ResponseMessages(Enum):
     credentials_are_required = 'Credentials are required'
     there_is_no_such_user = 'There is no such user'
     there_is_no_such_tag = 'There is no such tag'
+    there_is_no_such_category = 'There is no such category'

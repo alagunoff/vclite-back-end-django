@@ -10,8 +10,8 @@ from api.types import HttpRequestMethods, ResponseMessages
 from api.utils import check_if_requester_authenticated, check_if_requester_admin
 from api.permissions import IsRequesterAdmin
 
-from ..models.tag import Tag
-from ..serializers.tag import TagSerializer
+from ..models.category import Category
+from ..serializers.category import CategorySerializer
 
 
 @api_view([HttpRequestMethods.get.value, HttpRequestMethods.post.value])
@@ -19,38 +19,45 @@ from ..serializers.tag import TagSerializer
 @renderer_classes([JSONRenderer])
 def index(request: Request) -> Response:
     if request.method == HttpRequestMethods.get.value:
-        return Response(TagSerializer(Tag.objects.all(), many=True).data)
+        return Response(CategorySerializer(Category.objects.filter(parent_category=None), many=True).data)
 
     if check_if_requester_authenticated(request.user):
         if check_if_requester_admin(request.user):
-            tag_serializer = TagSerializer(data=request.data)
-            tag_serializer.is_valid(raise_exception=True)
-            tag_serializer.save()
+            category_serializer = CategorySerializer(data=request.data)
+            category_serializer.is_valid(raise_exception=True)
+            category_serializer.save()
 
             return Response({'detail': ResponseMessages.success.value}, status=status.HTTP_201_CREATED)
         else:
-            return Response({'detail': 'Only admins are allowed to create tags'}, status=status.HTTP_403_FORBIDDEN)
+            return Response({'detail': 'Only admins are allowed to create categories'}, status=status.HTTP_403_FORBIDDEN)
     else:
         return Response({'detail': ResponseMessages.credentials_are_required.value}, status=status.HTTP_401_UNAUTHORIZED, headers={'WWW-Authenticate': 'Token'})
 
 
-@api_view([HttpRequestMethods.delete.value, HttpRequestMethods.put.value])
+@api_view([HttpRequestMethods.post.value, HttpRequestMethods.delete.value, HttpRequestMethods.patch.value])
 @permission_classes([IsAuthenticated, IsRequesterAdmin])
 @parser_classes([JSONParser])
 @renderer_classes([JSONRenderer])
-def detail(request: Request, tag_id: int) -> Response:
+def detail(request: Request, category_id: int) -> Response:
     try:
-        tag = Tag.objects.get(pk=tag_id)
-    except Tag.DoesNotExist:
-        return Response({'detail': ResponseMessages.there_is_no_such_tag.value}, status=status.HTTP_404_NOT_FOUND)
+        category = Category.objects.get(pk=category_id)
+    except Category.DoesNotExist:
+        return Response({'detail': ResponseMessages.there_is_no_such_category.value}, status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == HttpRequestMethods.post.value:
+        category_serializer = CategorySerializer(data=request.data)
+        category_serializer.is_valid(raise_exception=True)
+        category_serializer.save(parent_category=category)
+
+        return Response({'detail': ResponseMessages.success.value}, status=status.HTTP_201_CREATED)
 
     if request.method == HttpRequestMethods.delete.value:
-        tag.delete()
+        category.delete()
 
         return Response({'detail': ResponseMessages.success.value})
 
-    tag_serializer = TagSerializer(tag, request.data)
-    tag_serializer.is_valid(raise_exception=True)
-    tag_serializer.save()
+    category_serializer = CategorySerializer(category, request.data)
+    category_serializer.is_valid(raise_exception=True)
+    category_serializer.save()
 
     return Response({'detail': ResponseMessages.success.value})
