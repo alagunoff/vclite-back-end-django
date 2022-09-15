@@ -47,16 +47,3 @@ class User(AbstractBaseUser):
     REQUIRED_FIELDS = ['first_name']
 
     objects = UserManager()
-
-    # def __str__(self):
-    #     return self.username
-
-    # def has_perm(self, perm, obj=None):
-    #     return True
-
-    # def has_module_perms(self, app_label):
-    #     return True
-
-    # @property
-    # def is_staff(self) -> bool:
-    #     return self.is_admin
