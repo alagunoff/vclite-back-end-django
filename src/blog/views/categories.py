@@ -1,63 +1,33 @@
-from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes, parser_classes, renderer_classes
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.parsers import JSONParser
-from rest_framework.renderers import JSONRenderer
-from rest_framework.request import Request
-from rest_framework.response import Response
+from rest_framework import generics, exceptions
 
-from api.types import HttpRequestMethods, ResponseMessages
-from api.utils import check_if_requester_authenticated, check_if_requester_admin
-from api.permissions import IsRequesterAdmin
+from api.types import HttpRequestMethods
+from api.utils import check_if_requester_admin
+from generics import RetrieveCreateUpdateDestroyAPIView
 
 from ..models.category import Category
 from ..serializers.category import CategorySerializer
 
 
-@api_view([HttpRequestMethods.get.value, HttpRequestMethods.post.value])
-@parser_classes([JSONParser])
-@renderer_classes([JSONRenderer])
-def index(request: Request) -> Response:
-    if request.method == HttpRequestMethods.get.value:
-        return Response(CategorySerializer(Category.objects.filter(parent_category=None), many=True).data)
+class Index(generics.ListCreateAPIView):
+    queryset = Category.objects.filter(parent_category=None)
+    serializer_class = CategorySerializer
 
-    if check_if_requester_authenticated(request.user):
-        if check_if_requester_admin(request.user):
-            category_serializer = CategorySerializer(data=request.data)
-            category_serializer.is_valid(raise_exception=True)
-            category_serializer.save()
+    def initial(self, request, *args, **kwargs):
+        if self.request.method != HttpRequestMethods.get.value and not check_if_requester_admin(request.user):
+            raise exceptions.NotFound()
 
-            return Response({'detail': ResponseMessages.success.value}, status=status.HTTP_201_CREATED)
-        else:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-    else:
-        return Response({'detail': ResponseMessages.credentials_are_required.value}, status=status.HTTP_401_UNAUTHORIZED, headers={'WWW-Authenticate': 'Token'})
+        super().initial(request, *args, **kwargs)
 
 
-@api_view([HttpRequestMethods.post.value, HttpRequestMethods.delete.value, HttpRequestMethods.patch.value])
-@permission_classes([IsRequesterAdmin])
-@parser_classes([JSONParser])
-@renderer_classes([JSONRenderer])
-def detail(request: Request, category_id: int) -> Response:
-    try:
-        category = Category.objects.get(pk=category_id)
-    except Category.DoesNotExist:
-        return Response({'detail': ResponseMessages.there_is_no_such_category.value}, status=status.HTTP_404_NOT_FOUND)
+class Detail(RetrieveCreateUpdateDestroyAPIView):
+    queryset = Category.objects.filter(parent_category=None)
+    serializer_class = CategorySerializer
 
-    if request.method == HttpRequestMethods.post.value:
-        category_serializer = CategorySerializer(data=request.data)
-        category_serializer.is_valid(raise_exception=True)
-        category_serializer.save(parent_category=category)
+    def initial(self, request, *args, **kwargs):
+        if self.request.method != HttpRequestMethods.get.value and not check_if_requester_admin(request.user):
+            raise exceptions.NotFound()
 
-        return Response({'detail': ResponseMessages.success.value}, status=status.HTTP_201_CREATED)
+        super().initial(request, *args, **kwargs)
 
-    if request.method == HttpRequestMethods.delete.value:
-        category.delete()
-
-        return Response({'detail': ResponseMessages.success.value})
-
-    category_serializer = CategorySerializer(category, request.data)
-    category_serializer.is_valid(raise_exception=True)
-    category_serializer.save()
-
-    return Response({'detail': ResponseMessages.success.value})
+    def perform_create(self, serializer):
+        serializer.save(parent_category=self.get_object())

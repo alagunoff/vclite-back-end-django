@@ -6,7 +6,7 @@ from ..models.category import Category
 class CategorySerializer(ModelSerializer):
     class Meta:
         model = Category
-        fields = ('id', 'name')
+        exclude = ('parent_category',)
 
     def get_fields(self):
         fields = super().get_fields()

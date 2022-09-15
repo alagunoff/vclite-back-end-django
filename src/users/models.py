@@ -1,7 +1,7 @@
 from django.db import models
+from django.db.models.signals import post_save
 from django.contrib.auth.models import BaseUserManager, AbstractBaseUser
 from django.conf import settings
-from django.db.models.signals import post_save
 from django.dispatch import receiver
 from rest_framework.authtoken.models import Token
 
@@ -29,7 +29,7 @@ class UserManager(BaseUserManager):
             first_name,
             password,
         )
-        user.is_admin = True
+        user.is_staff = True
         user.save(using=self._db)
 
         return user
@@ -41,22 +41,22 @@ class User(AbstractBaseUser):
     last_name = models.CharField(max_length=30, blank=True)
     avatar = models.ImageField(upload_to='images/users', blank=True)
     creation_date = models.DateTimeField(auto_now_add=True)
-    is_admin = models.BooleanField(default=False)
+    is_staff = models.BooleanField(default=False)
 
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['first_name']
 
     objects = UserManager()
 
-    def __str__(self):
-        return self.username
+    # def __str__(self):
+    #     return self.username
 
-    def has_perm(self, perm, obj=None):
-        return True
+    # def has_perm(self, perm, obj=None):
+    #     return True
 
-    def has_module_perms(self, app_label):
-        return True
+    # def has_module_perms(self, app_label):
+    #     return True
 
-    @property
-    def is_staff(self) -> bool:
-        return self.is_admin
+    # @property
+    # def is_staff(self) -> bool:
+    #     return self.is_admin

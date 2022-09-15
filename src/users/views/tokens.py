@@ -21,17 +21,19 @@ def index(request: Request) -> Response:
 
     if queried_username is not None and queried_password is not None:
         try:
-            user = User.objects.get(username=queried_username)
-            is_queried_password_correct = user.check_password(queried_password)
-
-            if is_queried_password_correct:
-                Token.objects.get(user=user).delete()
-                new_token = Token.objects.create(user=user).key
-
-                return Response({'token': new_token})
-            else:
-                return Response({'detail': 'Password isn\'t correct'}, status=status.HTTP_403_FORBIDDEN)
+            user = User.objects.get(pk=queried_username)
         except User.DoesNotExist:
             raise NotFound()
+
+        is_queried_password_correct = user.check_password(queried_password)
+
+        if is_queried_password_correct:
+            Token.objects.get(user=user).delete()
+            new_token = Token.objects.create(user=user).key
+
+            return Response({'token': new_token})
+        else:
+            return Response({'detail': 'Password isn\'t correct'}, status=status.HTTP_403_FORBIDDEN)
+
     else:
         return Response({'detail': 'Fields "username", "password" are required'}, status=status.HTTP_400_BAD_REQUEST)
