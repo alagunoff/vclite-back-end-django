@@ -9,7 +9,7 @@ from ..models import User
 from ..serializers import UserSerializer
 
 
-class Index(RetrieveCreateAPIView):
+class UserRetrieveCreateAPIView(RetrieveCreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
@@ -34,7 +34,7 @@ class Index(RetrieveCreateAPIView):
         return response.Response({'token': token_key}, status=status.HTTP_201_CREATED, headers=headers)
 
 
-class Detail(generics.RetrieveUpdateDestroyAPIView):
+class UserDestroyAPIView(generics.DestroyAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
