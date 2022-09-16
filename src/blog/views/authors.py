@@ -1,50 +1,31 @@
-from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes, parser_classes, renderer_classes
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.parsers import JSONParser
-from rest_framework.renderers import JSONRenderer
-from rest_framework.request import Request
-from rest_framework.response import Response
+from rest_framework import generics, exceptions
 
-from api.types import HttpRequestMethods, ResponseMessages
-from api.permissions import IsRequesterAdmin
+from api.utils import check_if_requester_admin
 
 from ..models.author import Author
 from ..serializers.author import AuthorSerializer
 
 
-@api_view([HttpRequestMethods.post.value, HttpRequestMethods.get.value])
-@permission_classes([IsAuthenticated, IsRequesterAdmin])
-@parser_classes([JSONParser])
-@renderer_classes([JSONRenderer])
-def index(request: Request) -> Response:
-    if request.method == HttpRequestMethods.post.value:
-        author_serializer = AuthorSerializer(data=request.data)
-        author_serializer.is_valid(raise_exception=True)
-        author_serializer.save(user=request.user)
+class ListCreateAPIView(generics.ListCreateAPIView):
+    queryset = Author.objects.all()
+    serializer_class = AuthorSerializer
 
-        return Response({'detail': ResponseMessages.success.value}, status=status.HTTP_201_CREATED)
+    def initial(self, request, *args, **kwargs):
+        if not check_if_requester_admin(request.user):
+            raise exceptions.NotFound()
 
-    return Response(AuthorSerializer(Author.objects.all(), many=True).data)
+        super().initial(request, *args, **kwargs)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
 
 
-@api_view([HttpRequestMethods.patch.value, HttpRequestMethods.delete.value])
-@permission_classes([IsAuthenticated, IsRequesterAdmin])
-@parser_classes([JSONParser])
-@renderer_classes([JSONRenderer])
-def detail(request: Request, username: str) -> Response:
-    try:
-        author = Author.objects.get(user__username=username)
-    except Author.DoesNotExist:
-        return Response({'detail': ResponseMessages.there_is_no_such_author.value}, status=status.HTTP_404_NOT_FOUND)
+class RetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Author.objects.all()
+    serializer_class = AuthorSerializer
 
-    if request.method == HttpRequestMethods.patch.value:
-        author_serializer = AuthorSerializer(author, request.data)
-        author_serializer.is_valid(raise_exception=True)
-        author_serializer.save()
+    def initial(self, request, *args, **kwargs):
+        if not check_if_requester_admin(request.user):
+            raise exceptions.NotFound()
 
-        return Response({'detail': ResponseMessages.success.value})
-
-    author.delete()
-
-    return Response({'detail': ResponseMessages.success.value})
+        super().initial(request, *args, **kwargs)
