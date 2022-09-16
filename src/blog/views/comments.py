@@ -27,9 +27,13 @@ class ListCreateDestroyAPIView(custom_generics.ListCreateDestroyAPIView):
         return []
 
     def perform_create(self, serializer):
+<<<<<<< HEAD
         post = Post.objects.get(pk=self.kwargs.get('post_id'))
 
         serializer.save(post=post)
+=======
+        serializer.save(post=self.kwargs.get('post_id'))
+>>>>>>> 0ffe7538fa5e033de81203da93352293b4e8f4d0
 
     def get_queryset(self):
         return super().get_queryset().filter(post=self.kwargs.get('post_id'))
