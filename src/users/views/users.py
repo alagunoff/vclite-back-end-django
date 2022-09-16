@@ -1,15 +1,14 @@
-from rest_framework import status, generics, permissions, exceptions, response
+from rest_framework import status, generics, mixins, permissions, exceptions, response
 from rest_framework.authtoken.models import Token
 
 from api.types import HttpRequestMethods
 from api.utils import check_if_requester_admin
-from generics import RetrieveCreateAPIView
 
 from ..models import User
 from ..serializers import UserSerializer
 
 
-class UserRetrieveCreateAPIView(RetrieveCreateAPIView):
+class UserRetrieveCreateAPIView(mixins.CreateModelMixin, generics.GenericAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
@@ -19,17 +18,17 @@ class UserRetrieveCreateAPIView(RetrieveCreateAPIView):
 
         return []
 
-    def retrieve(self, request, *args, **kwargs):
-        serializer = self.get_serializer(request.user)
+    def get(self, request, *args, **kwargs):
+        user_serializer = self.get_serializer(request.user)
 
-        return response.Response(serializer.data)
+        return response.Response(user_serializer.data)
 
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        super().perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        token_key = Token.objects.get(user=serializer.instance).key
+    def post(self, request, *args, **kwargs):
+        user_serializer = self.get_serializer(data=request.data)
+        user_serializer.is_valid(raise_exception=True)
+        user_serializer.save()
+        headers = self.get_success_headers(user_serializer.data)
+        token_key = Token.objects.get(user=user_serializer.instance).key
 
         return response.Response({'token': token_key}, status=status.HTTP_201_CREATED, headers=headers)
 
