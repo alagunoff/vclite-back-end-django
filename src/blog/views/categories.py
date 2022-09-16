@@ -2,13 +2,13 @@ from rest_framework import generics, exceptions
 
 from api.types import HttpRequestMethods
 from api.utils import check_if_requester_admin
-from generics import RetrieveCreateUpdateDestroyAPIView
+import generics as custom_generics
 
 from ..models.category import Category
 from ..serializers.category import CategorySerializer
 
 
-class Index(generics.ListCreateAPIView):
+class ListCreateAPIView(generics.ListCreateAPIView):
     queryset = Category.objects.filter(parent_category=None)
     serializer_class = CategorySerializer
 
@@ -19,7 +19,7 @@ class Index(generics.ListCreateAPIView):
         super().initial(request, *args, **kwargs)
 
 
-class Detail(RetrieveCreateUpdateDestroyAPIView):
+class RetrieveCreateUpdateDestroyAPIView(custom_generics.RetrieveCreateUpdateDestroyAPIView):
     queryset = Category.objects.filter(parent_category=None)
     serializer_class = CategorySerializer
 

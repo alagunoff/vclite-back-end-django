@@ -8,7 +8,7 @@ from ..models import User
 from ..serializers import UserSerializer
 
 
-class UserRetrieveCreateAPIView(mixins.CreateModelMixin, generics.GenericAPIView):
+class RetrieveCreateAPIView(mixins.CreateModelMixin, generics.GenericAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
@@ -33,7 +33,7 @@ class UserRetrieveCreateAPIView(mixins.CreateModelMixin, generics.GenericAPIView
         return response.Response({'token': token_key}, status=status.HTTP_201_CREATED, headers=headers)
 
 
-class UserDestroyAPIView(generics.DestroyAPIView):
+class DestroyAPIView(generics.DestroyAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 

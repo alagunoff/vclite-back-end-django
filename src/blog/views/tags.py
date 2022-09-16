@@ -7,7 +7,7 @@ from ..models.tag import Tag
 from ..serializers.tag import TagSerializer
 
 
-class Index(generics.ListCreateAPIView):
+class ListCreateAPIView(generics.ListCreateAPIView):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
 
@@ -18,7 +18,7 @@ class Index(generics.ListCreateAPIView):
         super().initial(request, *args, **kwargs)
 
 
-class Detail(generics.RetrieveUpdateDestroyAPIView):
+class RetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
 
