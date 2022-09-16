@@ -1,5 +1,8 @@
 from django.db import models
 
+from .post import Post
+
 
 class Comment(models.Model):
-    text = models.TextField()
+    post = models.ForeignKey(Post, on_delete=models.CASCADE)
+    content = models.TextField()
