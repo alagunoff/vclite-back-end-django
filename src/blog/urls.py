@@ -11,6 +11,6 @@ urlpatterns = [
     #     path('/categories', categories.ListCreateAPIView.as_view()),
     #     path('/categories/<int:pk>',
     #          categories.RetrieveCreateUpdateDestroyAPIView.as_view()),
-    #     path('/tags', tags.ListCreateAPIView.as_view()),
-    #     path('/tags/<int:pk>', tags.RetrieveUpdateDestroyAPIView.as_view()),
+    path('/tags', tags.index),
+    path('/tags/<int:tag_id>', tags.detail),
 ]

@@ -7,8 +7,3 @@ class HttpRequestMethods(Enum):
     delete = 'DELETE'
     put = 'PUT'
     patch = 'PATCH'
-
-
-class ResponseMessages(Enum):
-    success = 'success'
-    credentials_are_required = 'Credentials are required'
