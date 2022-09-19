@@ -20,7 +20,7 @@ def index(request: HttpRequest) -> HttpResponse:
             return HttpResponseNotFound()
     if request.method == HttpRequestMethods.post.value:
         user = User.objects.create_user(
-            username=request.POST.get('username'), password=request.POST.get('password'), first_name=request.POST.get('first_name'), avatar=request.FILES.get('avatar'))
+            request.POST.get('username'), request.POST.get('password'), request.POST.get('first_name'), avatar=request.FILES.get('avatar'))
 
         return JsonResponseCreated({'token': Token.objects.get(user=user).token})
 
