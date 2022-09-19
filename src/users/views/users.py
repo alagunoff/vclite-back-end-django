@@ -1,44 +1,54 @@
-from rest_framework import status, generics, mixins, permissions, exceptions, response
-from rest_framework.authtoken.models import Token
+from django.http import HttpRequest, HttpResponse, JsonResponse, HttpResponseNotAllowed, HttpResponseNotFound, HttpResponseBadRequest
+from django.forms.models import model_to_dict
+from django.contrib.auth import authenticate
 
 from api.types import HttpRequestMethods
-from api.utils import check_if_requester_admin
+from api.utils import get_user_from_request, check_if_requester_admin
+from api.responses import HttpResponseNoContent, JsonResponseCreated
 
-from ..models import User
-from ..serializers import UserSerializer
-
-
-class RetrieveCreateAPIView(mixins.CreateModelMixin, generics.GenericAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-
-    def get_permissions(self):
-        if self.request.method == HttpRequestMethods.get.value:
-            return [permissions.IsAuthenticated()]
-
-        return []
-
-    def get(self, request, *args, **kwargs):
-        user_serializer = self.get_serializer(request.user)
-
-        return response.Response(user_serializer.data)
-
-    def post(self, request, *args, **kwargs):
-        user_serializer = self.get_serializer(data=request.data)
-        user_serializer.is_valid(raise_exception=True)
-        user_serializer.save()
-        headers = self.get_success_headers(user_serializer.data)
-        token_key = Token.objects.get(user=user_serializer.instance).key
-
-        return response.Response({'token': token_key}, status=status.HTTP_201_CREATED, headers=headers)
+from ..models import User, Token
 
 
-class DestroyAPIView(generics.DestroyAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
+def index(request: HttpRequest) -> HttpResponse:
+    if request.method == HttpRequestMethods.get.value:
+        user = get_user_from_request(request)
 
-    def initial(self, request, *args, **kwargs):
-        if not check_if_requester_admin(request.user):
-            raise exceptions.NotFound()
+        if user:
+            return JsonResponse(model_to_dict(user))
+        else:
+            return HttpResponseNotFound()
+    if request.method == HttpRequestMethods.post.value:
+        user = User.objects.create_user(
+            request.POST.get('username'), request.POST.get('password'), request.POST.get('first_name'))
 
-        super().initial(request, *args, **kwargs)
+        return JsonResponseCreated({'token': Token.objects.get(user=user).token})
+
+    return HttpResponseNotAllowed([HttpRequestMethods.get.value, HttpRequestMethods.post.value])
+
+
+def detail(request: HttpRequest, user_id: int) -> HttpResponse:
+    if request.method == HttpRequestMethods.delete.value:
+        if check_if_requester_admin(request):
+            try:
+                User.objects.get(id=user_id).delete()
+            except User.DoesNotExist:
+                return HttpResponseNotFound()
+
+            return HttpResponseNoContent()
+        else:
+            return HttpResponseNotFound()
+
+    return HttpResponseNotAllowed([HttpRequestMethods.delete.value])
+
+
+def login(request: HttpRequest) -> HttpResponse:
+    if request.method == HttpRequestMethods.post.value:
+        user = authenticate(username=request.POST.get(
+            'username'), password=request.POST.get('password'))
+
+        if user:
+            return JsonResponse({'token': Token.objects.get(user=user).token})
+        else:
+            return HttpResponseBadRequest()
+
+    return HttpResponseNotAllowed([HttpRequestMethods.post.value])

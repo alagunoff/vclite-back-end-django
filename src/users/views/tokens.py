@@ -9,7 +9,7 @@ from rest_framework.authtoken.models import Token
 
 from api.types import HttpRequestMethods
 
-from ..models import User
+from ..models.user import User
 
 
 @api_view([HttpRequestMethods.get.value])

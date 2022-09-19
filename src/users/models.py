@@ -1,35 +1,36 @@
-from django.db import models
-from django.db.models.signals import post_save
-from django.contrib.auth.models import BaseUserManager, AbstractBaseUser
+import binascii
+import os
 from django.conf import settings
-from django.dispatch import receiver
-from rest_framework.authtoken.models import Token
+from django.db import models
+from django.contrib.auth.models import BaseUserManager, AbstractBaseUser
 
 
-@receiver(post_save, sender=settings.AUTH_USER_MODEL)
-def create_auth_token(sender, instance=None, created=False, **kwargs):
-    if created:
-        Token.objects.create(user=instance)
+class Token(models.Model):
+    token = models.CharField(max_length=40)
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
 
 class UserManager(BaseUserManager):
-    def create_user(self, username: str, first_name: str, password: None = None) -> 'User':
-        user: User = self.model(
+    def create_user(self, username, password, first_name):
+        user = self.model(
             username=username,
             first_name=first_name
         )
         user.set_password(password)
         user.save(using=self.db)
+        Token.objects.create(token=binascii.hexlify(
+            os.urandom(20)).decode(), user=user)
 
         return user
 
-    def create_superuser(self, username: str, first_name: str, password: None = None) -> 'User':
+    def create_superuser(self, username, first_name, password):
         user = self.create_user(
             username,
-            first_name,
             password,
+            first_name,
         )
-        user.is_staff = True
+        user.is_admin = True
         user.save(using=self._db)
 
         return user
@@ -38,12 +39,12 @@ class UserManager(BaseUserManager):
 class User(AbstractBaseUser):
     username = models.CharField(max_length=30, unique=True)
     first_name = models.CharField(max_length=30)
-    last_name = models.CharField(max_length=30, blank=True)
-    avatar = models.ImageField(upload_to='images/users', blank=True)
+    last_name = models.CharField(max_length=30, blank=True, null=True)
+    avatar = models.ImageField(upload_to='images/users', blank=True, null=True)
     creation_date = models.DateTimeField(auto_now_add=True)
-    is_staff = models.BooleanField(default=False)
+    is_admin = models.BooleanField(default=False)
+
+    objects = UserManager()
 
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['first_name']
-
-    objects = UserManager()
