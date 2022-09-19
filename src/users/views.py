@@ -1,13 +1,12 @@
 from django.http import HttpRequest, HttpResponse, JsonResponse, HttpResponseNotAllowed, HttpResponseNotFound, HttpResponseBadRequest
-from django.forms.models import model_to_dict
 from django.contrib.auth import authenticate
 
 from api.types import HttpRequestMethods
 from api.utils import get_user_from_request
 from api.responses import HttpResponseNoContent, JsonResponseCreated
-from shared.utils import JSONEncoder
 
 from .models import User, Token
+from .utils import map_user_to_dict
 
 
 def index(request: HttpRequest) -> HttpResponse:
@@ -15,7 +14,7 @@ def index(request: HttpRequest) -> HttpResponse:
         user = get_user_from_request(request)
 
         if user:
-            return JsonResponse(model_to_dict(user), encoder=JSONEncoder)
+            return JsonResponse(map_user_to_dict(user))
         else:
             return HttpResponseNotFound()
     if request.method == HttpRequestMethods.post.value:
