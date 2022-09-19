@@ -4,6 +4,8 @@ from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import BaseUserManager, AbstractBaseUser
 
+from .utils import get_avatar_directory_path
+
 
 class Token(models.Model):
     token = models.CharField(max_length=40)
@@ -12,10 +14,11 @@ class Token(models.Model):
 
 
 class UserManager(BaseUserManager):
-    def create_user(self, username, password, first_name):
+    def create_user(self, username, password, first_name, **extra_fields):
         user = self.model(
             username=username,
-            first_name=first_name
+            first_name=first_name,
+            **extra_fields
         )
         user.set_password(password)
         user.save(using=self.db)
@@ -24,11 +27,12 @@ class UserManager(BaseUserManager):
 
         return user
 
-    def create_superuser(self, username, first_name, password):
+    def create_superuser(self, username, first_name, password, **extra_fields):
         user = self.create_user(
             username,
             password,
             first_name,
+            **extra_fields
         )
         user.is_admin = True
         user.save(using=self._db)
@@ -40,7 +44,8 @@ class User(AbstractBaseUser):
     username = models.CharField(max_length=30, unique=True)
     first_name = models.CharField(max_length=30)
     last_name = models.CharField(max_length=30, blank=True, null=True)
-    avatar = models.ImageField(upload_to='images/users', blank=True, null=True)
+    avatar = models.ImageField(upload_to=get_avatar_directory_path, blank=True,
+                               default='users/user-picture-placeholder.jpg')
     creation_date = models.DateTimeField(auto_now_add=True)
     is_admin = models.BooleanField(default=False)
 

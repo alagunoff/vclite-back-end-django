@@ -3,10 +3,11 @@ from django.forms.models import model_to_dict
 from django.contrib.auth import authenticate
 
 from api.types import HttpRequestMethods
-from api.utils import get_user_from_request, check_if_requester_admin
+from api.utils import get_user_from_request
 from api.responses import HttpResponseNoContent, JsonResponseCreated
+from shared.utils import JSONEncoder
 
-from ..models import User, Token
+from .models import User, Token
 
 
 def index(request: HttpRequest) -> HttpResponse:
@@ -14,12 +15,12 @@ def index(request: HttpRequest) -> HttpResponse:
         user = get_user_from_request(request)
 
         if user:
-            return JsonResponse(model_to_dict(user))
+            return JsonResponse(model_to_dict(user), encoder=JSONEncoder)
         else:
             return HttpResponseNotFound()
     if request.method == HttpRequestMethods.post.value:
         user = User.objects.create_user(
-            request.POST.get('username'), request.POST.get('password'), request.POST.get('first_name'))
+            username=request.POST.get('username'), password=request.POST.get('password'), first_name=request.POST.get('first_name'), avatar=request.FILES.get('avatar'))
 
         return JsonResponseCreated({'token': Token.objects.get(user=user).token})
 
@@ -27,18 +28,20 @@ def index(request: HttpRequest) -> HttpResponse:
 
 
 def detail(request: HttpRequest, user_id: int) -> HttpResponse:
-    if request.method == HttpRequestMethods.delete.value:
-        if check_if_requester_admin(request):
+    requesting_user = get_user_from_request(request)
+
+    if requesting_user and requesting_user.is_admin:
+        if request.method == HttpRequestMethods.delete.value:
             try:
                 User.objects.get(id=user_id).delete()
+
+                return HttpResponseNoContent()
             except User.DoesNotExist:
                 return HttpResponseNotFound()
 
-            return HttpResponseNoContent()
-        else:
-            return HttpResponseNotFound()
-
-    return HttpResponseNotAllowed([HttpRequestMethods.delete.value])
+        return HttpResponseNotAllowed([HttpRequestMethods.delete.value])
+    else:
+        return HttpResponseNotFound()
 
 
 def login(request: HttpRequest) -> HttpResponse:
