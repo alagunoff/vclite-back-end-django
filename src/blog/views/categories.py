@@ -6,7 +6,7 @@ from api.utils import check_if_requesting_user_admin
 from api.responses import HttpResponseNoContent, JsonResponseCreated
 
 from ..models.category import Category
-from ..utils import map_category_to_dict
+from ..utils.categories import map_category_to_dict
 
 
 def index(request: HttpRequest) -> HttpResponse:

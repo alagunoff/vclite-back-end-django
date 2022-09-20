@@ -3,7 +3,8 @@ from django.urls import path
 from .views import posts, comments, authors, categories, tags
 
 urlpatterns = [
-    #     path('/posts', posts.ListCreateAPIView.as_view()),
+    path('/posts', posts.index),
+    path('/posts/<int:post_id>', posts.detail),
     #     path('/posts/<int:post_id>/comments',
     #          comments.ListCreateDestroyAPIView.as_view()),
     path('/authors', authors.index),

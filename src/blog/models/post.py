@@ -1,18 +1,13 @@
 from django.db import models
+from typing import Any
 
 from .author import Author
 from .category import Category
 from .tag import Tag
 
 
-def get_path_to_store_post_primary_image(instance, filename):
-    # file will be uploaded to MEDIA_ROOT/post_<id>/<filename>
-    return f'posts/{instance.id}/{filename}'
-
-
-def get_path_to_store_post_secondary_image(instance, filename):
-    # file will be uploaded to MEDIA_ROOT/post_<id>/<filename>
-    return f'posts/{instance.post.id}/{filename}'
+def get_post_image_directory_path(instance: Any, filename: str) -> str:
+    return f'posts/author_{instance.author.id}({instance.title})/{filename}'
 
 
 class Post(models.Model):
@@ -22,10 +17,13 @@ class Post(models.Model):
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     tags = models.ManyToManyField(Tag)
     creation_date = models.DateTimeField(auto_now_add=True)
-    primary_image = models.ImageField(
-        upload_to=get_path_to_store_post_primary_image, blank=True)
+    image = models.ImageField(upload_to=get_post_image_directory_path)
 
 
-class PostSecondaryImage(models.Model):
+def get_post_extra_image_directory_path(instance: Any, filename: str) -> str:
+    return f'posts/author_{instance.post.author.id}({instance.post.title})/{filename}'
+
+
+class PostExtraImage(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
-    images = models.FileField(upload_to=get_path_to_store_post_secondary_image)
+    image = models.FileField(upload_to=get_post_extra_image_directory_path)

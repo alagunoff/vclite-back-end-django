@@ -4,10 +4,9 @@ from django.http import HttpRequest, HttpResponse, HttpResponseNotFound, HttpRes
 from api.types import HttpRequestMethods
 from api.utils import check_if_requesting_user_admin
 from api.responses import HttpResponseNoContent, JsonResponseCreated
-from users.models import User
 
 from ..models.author import Author
-from ..utils import map_author_to_dict
+from ..utils.authors import map_author_to_dict
 
 
 def index(request: HttpRequest) -> HttpResponse:
@@ -19,9 +18,8 @@ def index(request: HttpRequest) -> HttpResponse:
 
         if request.method == HttpRequestMethods.post.value:
             data = json.loads(request.body)
-            related_user = User.objects.get(id=data.get('user_id'))
             created_author = Author.objects.create(
-                user=related_user, description=data.get('description'))
+                description=data.get('description'), user_id=data.get('user_id'))
 
             return JsonResponseCreated(map_author_to_dict(created_author))
 
