@@ -8,9 +8,8 @@ urlpatterns = [
     #          comments.ListCreateDestroyAPIView.as_view()),
     #     path('/authors', authors.ListCreateAPIView.as_view()),
     #     path('/authors/<int:pk>', authors.RetrieveUpdateDestroyAPIView.as_view()),
-    #     path('/categories', categories.ListCreateAPIView.as_view()),
-    #     path('/categories/<int:pk>',
-    #          categories.RetrieveCreateUpdateDestroyAPIView.as_view()),
+    path('/categories', categories.index),
+    path('/categories/<int:category_id>', categories.detail),
     path('/tags', tags.index),
     path('/tags/<int:tag_id>', tags.detail),
 ]

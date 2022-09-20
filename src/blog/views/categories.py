@@ -1,33 +1,69 @@
-# from rest_framework import generics, exceptions
+import json
+from django.http import HttpRequest, HttpResponse, HttpResponseNotFound, HttpResponseNotAllowed, JsonResponse
 
-# from api.types import HttpRequestMethods
-# from api.utils import check_if_requester_admin
-# import generics as custom_generics
+from api.types import HttpRequestMethods
+from api.utils import check_if_requesting_user_admin
+from api.responses import HttpResponseNoContent, JsonResponseCreated
 
-# from ..models.category import Category
-# from ..serializers.category import CategorySerializer
-
-
-# class ListCreateAPIView(generics.ListCreateAPIView):
-#     queryset = Category.objects.filter(parent_category=None)
-#     serializer_class = CategorySerializer
-
-#     def initial(self, request, *args, **kwargs):
-#         if self.request.method != HttpRequestMethods.get.value and not check_if_requester_admin(request.user):
-#             raise exceptions.NotFound()
-
-#         super().initial(request, *args, **kwargs)
+from ..models.category import Category
+from ..utils import map_category_to_dict
 
 
-# class RetrieveCreateUpdateDestroyAPIView(custom_generics.RetrieveCreateUpdateDestroyAPIView):
-#     queryset = Category.objects.filter(parent_category=None)
-#     serializer_class = CategorySerializer
+def index(request: HttpRequest) -> HttpResponse:
+    if request.method == HttpRequestMethods.get.value:
+        return JsonResponse(list(map(map_category_to_dict, Category.objects.filter(parent_category=None))), safe=False)
 
-#     def initial(self, request, *args, **kwargs):
-#         if self.request.method != HttpRequestMethods.get.value and not check_if_requester_admin(request.user):
-#             raise exceptions.NotFound()
+    is_requesting_user_admin = check_if_requesting_user_admin(request)
 
-#         super().initial(request, *args, **kwargs)
+    if is_requesting_user_admin:
+        if request.method == HttpRequestMethods.post.value:
+            data = json.loads(request.body)
+            created_category = Category.objects.create(
+                category=data.get('category'))
 
-#     def perform_create(self, serializer):
-#         serializer.save(parent_category=self.get_object())
+            return JsonResponseCreated(map_category_to_dict(created_category))
+
+        return HttpResponseNotAllowed([HttpRequestMethods.get.value, HttpRequestMethods.post.value])
+    else:
+        return HttpResponseNotAllowed([HttpRequestMethods.get.value])
+
+
+def detail(request: HttpRequest, category_id: int) -> HttpResponse:
+    try:
+        category_for_dealing = Category.objects.get(id=category_id)
+    except Category.DoesNotExist:
+        return HttpResponseNotFound()
+
+    if request.method == HttpRequestMethods.get.value:
+        return JsonResponse(map_category_to_dict(category_for_dealing))
+
+    is_requesting_user_admin = check_if_requesting_user_admin(request)
+
+    if is_requesting_user_admin:
+        if request.method == HttpRequestMethods.post.value:
+            data = json.loads(request.body)
+            created_subcategory = Category.objects.create(
+                category=data.get('category'), parent_category=category_for_dealing)
+
+            return JsonResponseCreated(map_category_to_dict(created_subcategory))
+
+        if request.method == HttpRequestMethods.put.value:
+            data = json.loads(request.body)
+            category_for_dealing.category = data.get('category')
+            category_for_dealing.save()
+
+            return JsonResponse(map_category_to_dict(category_for_dealing))
+
+        if request.method == HttpRequestMethods.delete.value:
+            category_for_dealing.delete()
+
+            return HttpResponseNoContent()
+
+        return HttpResponseNotAllowed([
+            HttpRequestMethods.get.value,
+            HttpRequestMethods.post.value,
+            HttpRequestMethods.put.value,
+            HttpRequestMethods.delete.value
+        ])
+    else:
+        return HttpResponseNotAllowed([HttpRequestMethods.get.value])

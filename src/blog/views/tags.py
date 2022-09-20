@@ -41,7 +41,6 @@ def detail(request: HttpRequest, tag_id: int) -> HttpResponse:
     if is_requesting_user_admin:
         if request.method == HttpRequestMethods.put.value:
             data = json.loads(request.body)
-
             tag_for_dealing.tag = data.get('tag')
             tag_for_dealing.save()
 
