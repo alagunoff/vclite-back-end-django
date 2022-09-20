@@ -5,8 +5,7 @@ from .views import posts, comments, authors, categories, tags
 urlpatterns = [
     path('/posts', posts.index),
     path('/posts/<int:post_id>', posts.detail),
-    #     path('/posts/<int:post_id>/comments',
-    #          comments.ListCreateDestroyAPIView.as_view()),
+    path('/posts/<int:post_id>/comments', comments.index),
     path('/authors', authors.index),
     path('/authors/<int:author_id>', authors.detail),
     path('/categories', categories.index),

@@ -1,33 +1,39 @@
-# from rest_framework import exceptions, permissions
+import json
+from django.http import HttpRequest, HttpResponse, HttpResponseNotFound, HttpResponseNotAllowed, JsonResponse
 
-# from api.types import HttpRequestMethods
-# from api.utils import check_if_requester_admin
-# import generics as custom_generics
+from api.types import HttpRequestMethods
+from api.utils import check_if_requesting_user_admin
+from api.responses import HttpResponseNoContent, JsonResponseCreated
 
-# from ..models.comment import Comment
-# from ..models.post import Post
-# from ..serializers.comment import CommentSerializer
+from ..models.comment import Comment
+from ..models.post import Post
+from ..utils.comments import create_comment, map_comment_to_dict
 
 
-# class ListCreateDestroyAPIView(custom_generics.ListCreateDestroyAPIView):
-#     queryset = Comment.objects.all()
-#     serializer_class = CommentSerializer
-#     lookup_field = 'post'
+def index(request: HttpRequest, post_id: int) -> HttpResponse:
+    try:
+        Post.objects.get(id=post_id)
+    except Post.DoesNotExist:
+        return HttpResponseNotFound()
 
-#     def initial(self, request, *args, **kwargs):
-#         if self.request.method == HttpRequestMethods.delete.value and not check_if_requester_admin(request.user):
-#             raise exceptions.NotFound()
+    post_comments = Comment.objects.filter(post_id=post_id)
 
-#         super().initial(request, *args, **kwargs)
+    if request.method == HttpRequestMethods.get.value:
+        return JsonResponse(list(map(map_comment_to_dict, post_comments)), safe=False)
 
-#     def get_permissions(self):
-#         if self.request.method != HttpRequestMethods.get.value:
-#             return [permissions.IsAuthenticated()]
+    is_requesting_user_admin = check_if_requesting_user_admin(request)
 
-#         return []
+    if is_requesting_user_admin:
+        if request.method == HttpRequestMethods.post.value:
+            created_comment = create_comment(json.loads(request.body), post_id)
 
-#     def perform_create(self, serializer):
-#         serializer.save(post=Post.objects.get(pk=self.kwargs.get('post_id')))
+            return JsonResponseCreated(map_comment_to_dict(created_comment))
 
-#     def get_queryset(self):
-#         return super().get_queryset().filter(post=self.kwargs.get('post_id'))
+        if request.method == HttpRequestMethods.delete.value:
+            post_comments.delete()
+
+            return HttpResponseNoContent()
+
+        return HttpResponseNotAllowed([HttpRequestMethods.get.value, HttpRequestMethods.post.value, HttpRequestMethods.delete.value])
+    else:
+        return HttpResponseNotAllowed([HttpRequestMethods.get.value])
