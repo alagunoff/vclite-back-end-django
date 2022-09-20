@@ -4,6 +4,8 @@ from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import BaseUserManager, AbstractBaseUser
 
+from shared.utils import convert_base64_to_image
+
 from .utils import get_avatar_directory_path
 
 
@@ -14,16 +16,17 @@ class Token(models.Model):
 
 
 class UserManager(BaseUserManager):
-    def create_user(self, username, password, first_name, **kwargs):
-        extra_fields = {}
-        avatar = kwargs.get('avatar')
+    def create_user(self, username, password, **kwargs):
+        extra_fields = {
+            'first_name': kwargs.get('first_name')
+        }
 
+        avatar = kwargs.get('avatar')
         if avatar:
-            extra_fields['avatar'] = avatar
+            extra_fields['avatar'] = convert_base64_to_image(avatar)
 
         user = self.model(
             username=username,
-            first_name=first_name,
             **extra_fields
         )
         user.set_password(password)
@@ -37,7 +40,7 @@ class UserManager(BaseUserManager):
         user = self.create_user(
             username,
             password,
-            first_name,
+            first_name=first_name,
             **kwargs
         )
         user.is_admin = True
