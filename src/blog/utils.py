@@ -14,3 +14,11 @@ def map_category_to_dict(category: Any) -> dict[str, Any]:
         'category': category.category,
         'subcategories': list(map(map_category_to_dict, category.subcategories.all()))
     }
+
+
+def map_author_to_dict(author: Any) -> dict[str, int | str]:
+    return {
+        'id': author.id,
+        'user_id': author.user.id,
+        'description': author.description
+    }
