@@ -1,4 +1,6 @@
 from typing import Any
+from django.db.models import QuerySet, Q
+from django.http import QueryDict
 
 from ..models.post import Post, PostExtraImage
 from ..models.comment import Comment
@@ -76,3 +78,64 @@ def map_post_to_dict(post: Any) -> dict[str, Any]:
                 post_dict['extra_images'] = [extra_image]
 
     return post_dict
+
+
+def filter_posts(posts: QuerySet[Post], query_params: QueryDict) -> QuerySet[Post]:
+    if 'title' in query_params:
+        posts = posts.filter(title__contains=query_params.get('title'))
+
+    if 'content' in query_params:
+        posts = posts.filter(content__contains=query_params.get('content'))
+
+    if 'creation_date' in query_params:
+        posts = posts.filter(creation_date=query_params.get('creation_date'))
+
+    if 'creation_date__lt' in query_params:
+        posts = posts.filter(
+            creation_date__lt=query_params.get('creation_date__lt'))
+
+    if 'creation_date__gt' in query_params:
+        posts = posts.filter(
+            creation_date__gt=query_params.get('creation_date__gt'))
+
+    if 'author_name' in query_params:
+        posts = posts.filter(
+            author__user__first_name=query_params.get('author_name'))
+
+    if 'category_id' in query_params:
+        posts = posts.filter(category_id=query_params.get('category_id'))
+
+    if 'tag' in query_params:
+        posts = posts.filter(tags__id=query_params.get('tag'))
+
+    if 'tags__in' in query_params:
+        posts = posts.filter(tags__id__in=list(
+            map(int, query_params.getlist('tags__in')))).distinct()
+
+    if 'tags__all' in query_params:
+        for tag_id in query_params.getlist('tags__all'):
+            posts = posts.filter(tags__id=tag_id)
+
+    if 'search' in query_params:
+        search = query_params.get('search')
+        posts = posts.filter(Q(title__contains=search) | Q(content__contains=search) | Q(
+            author__user__first_name=search) | Q(category__category=search) | Q(tags__tag=search))
+
+    ordering_field = query_params.get('order_by')
+    if ordering_field:
+        if ordering_field in ('creation_date', '-creation_date'):
+            posts = posts.order_by(ordering_field)
+
+        if ordering_field == 'author_name':
+            posts = posts.order_by('author__user__first_name')
+
+        if ordering_field == '-author_name':
+            posts = posts.order_by('-author__user__first_name')
+
+        if ordering_field == 'category':
+            posts = posts.order_by('category__category')
+
+        if ordering_field == '-category':
+            posts = posts.order_by('-category__category')
+
+    return posts

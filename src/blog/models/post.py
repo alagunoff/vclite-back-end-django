@@ -11,7 +11,7 @@ class Post(models.Model):
     author = models.ForeignKey(Author, on_delete=models.CASCADE)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     tags = models.ManyToManyField(Tag)
-    creation_date = models.DateTimeField(auto_now_add=True)
+    creation_date = models.DateField(auto_now_add=True)
     image = models.CharField(max_length=900000)
     is_draft = models.BooleanField(default=False)
 

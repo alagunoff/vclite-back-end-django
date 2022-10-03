@@ -6,12 +6,12 @@ from api.utils import get_requesting_author, check_if_requesting_user_admin
 from api.responses import HttpResponseNoContent, JsonResponseCreated, JsonResponseForbidden
 
 from ..models.post import Post
-from ..utils.posts import create_post, map_post_to_dict
+from ..utils.posts import create_post, map_post_to_dict, filter_posts
 
 
 def index(request: HttpRequest) -> HttpResponse:
     if request.method == HttpRequestMethods.get.value:
-        return JsonResponse(list(map(map_post_to_dict, Post.objects.filter(is_draft=False))), safe=False)
+        return JsonResponse(list(map(map_post_to_dict, filter_posts(Post.objects.filter(is_draft=False), request.GET))), safe=False)
 
     requesting_author = get_requesting_author(request)
 
