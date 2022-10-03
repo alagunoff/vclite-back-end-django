@@ -7,3 +7,7 @@ class HttpResponseNoContent(HttpResponse):
 
 class JsonResponseCreated(JsonResponse):
     status_code = 201
+
+
+class JsonResponseForbidden(JsonResponse):
+    status_code = 403

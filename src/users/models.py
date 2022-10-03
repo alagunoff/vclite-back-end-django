@@ -4,9 +4,7 @@ from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import BaseUserManager, AbstractBaseUser
 
-from shared.utils import decode_base64_to_image
-
-from .utils import get_user_avatar_directory_path
+from .constants import DEFAULT_USER_BASE64_AVATAR
 
 
 class Token(models.Model):
@@ -18,12 +16,9 @@ class Token(models.Model):
 class UserManager(BaseUserManager):
     def create_user(self, username, password, **kwargs):
         extra_fields = {
-            'first_name': kwargs.get('first_name')
+            'first_name': kwargs.get('first_name'),
+            'avatar': kwargs.get('avatar', DEFAULT_USER_BASE64_AVATAR)
         }
-
-        avatar = kwargs.get('avatar')
-        if avatar:
-            extra_fields['avatar'] = decode_base64_to_image(avatar)
 
         user = self.model(
             username=username,
@@ -54,8 +49,7 @@ class User(AbstractBaseUser):
     first_name = models.CharField(max_length=30)
     last_name = models.CharField(
         max_length=30, blank=True, null=True)
-    avatar = models.ImageField(upload_to=get_user_avatar_directory_path, blank=True,
-                               default='users/user-picture-placeholder.jpg')
+    avatar = models.CharField(max_length=900000)
     creation_date = models.DateTimeField(auto_now_add=True)
     is_admin = models.BooleanField(default=False)
 

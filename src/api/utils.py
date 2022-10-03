@@ -1,6 +1,7 @@
 from django.http import HttpRequest
 
 from users.models import User, Token
+from blog.models.author import Author
 
 
 def get_requesting_user(request: HttpRequest) -> User | None:
@@ -12,6 +13,18 @@ def get_requesting_user(request: HttpRequest) -> User | None:
                 return Token.objects.get(token=authorization_header[6:]).user
             except Token.DoesNotExist:
                 return None
+
+    return None
+
+
+def get_requesting_author(request: HttpRequest) -> Author | None:
+    requesting_user = get_requesting_user(request)
+
+    if requesting_user:
+        try:
+            return Author.objects.get(user=requesting_user)
+        except Author.DoesNotExist:
+            return None
 
     return None
 
