@@ -22,7 +22,7 @@ def index(request: HttpRequest, post_id: int) -> HttpResponse:
     if request.method == HttpRequestMethods.get.value:
         paginated_comments = paginate_queryset(comments, request.GET)
 
-        return JsonResponse(list(map(map_comment_to_dict, paginated_comments)), safe=False)
+        return JsonResponse([map_comment_to_dict(comment) for comment in paginated_comments], safe=False)
 
     is_requesting_user_admin = check_if_requesting_user_admin(request)
 

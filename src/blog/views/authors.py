@@ -18,7 +18,7 @@ def index(request: HttpRequest) -> HttpResponse:
             paginated_authors = paginate_queryset(
                 Author.objects.all(), request.GET)
 
-            return JsonResponse(list(map(map_author_to_dict, paginated_authors)), safe=False)
+            return JsonResponse([map_author_to_dict(author) for author in paginated_authors], safe=False)
 
         if request.method == HttpRequestMethods.post.value:
             data = json.loads(request.body)

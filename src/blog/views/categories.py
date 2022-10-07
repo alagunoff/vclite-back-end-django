@@ -15,7 +15,7 @@ def index(request: HttpRequest) -> HttpResponse:
         paginated_categories = paginate_queryset(
             Category.objects.filter(parent_category=None), request.GET)
 
-        return JsonResponse(list(map(map_category_to_dict, paginated_categories)), safe=False)
+        return JsonResponse([map_category_to_dict(category) for category in paginated_categories], safe=False)
 
     is_requesting_user_admin = check_if_requesting_user_admin(request)
 

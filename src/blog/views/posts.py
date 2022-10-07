@@ -17,7 +17,7 @@ def index(request: HttpRequest) -> HttpResponse:
         sorted_posts = sort_posts(filtered_posts, request.GET)
         paginated_posts = paginate_queryset(sorted_posts, request.GET)
 
-        return JsonResponse(list(map(map_post_to_dict, paginated_posts)), safe=False)
+        return JsonResponse([map_post_to_dict(post) for post in paginated_posts], safe=False)
 
     requesting_author = get_requesting_author(request)
 

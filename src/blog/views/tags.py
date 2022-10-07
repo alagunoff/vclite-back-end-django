@@ -14,7 +14,7 @@ def index(request: HttpRequest) -> HttpResponse:
     if request.method == HttpRequestMethods.get.value:
         paginated_tags = paginate_queryset(Tag.objects.all(), request.GET)
 
-        return JsonResponse(list(map(map_tag_to_dict, paginated_tags)), safe=False)
+        return JsonResponse([map_tag_to_dict(tag) for tag in paginated_tags], safe=False)
 
     is_requesting_user_admin = check_if_requesting_user_admin(request)
 

@@ -17,7 +17,7 @@ def index(request: HttpRequest) -> HttpResponse:
         paginated_drafts = paginate_queryset(Post.objects.filter(
             author=requesting_author, is_draft=True), request.GET)
 
-        return JsonResponse(list(map(map_post_to_dict, paginated_drafts)), safe=False)
+        return JsonResponse([map_post_to_dict(draft) for draft in paginated_drafts], safe=False)
 
     if request.method == HttpRequestMethods.post.value:
         if requesting_author:
