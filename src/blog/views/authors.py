@@ -4,6 +4,7 @@ from django.http import HttpRequest, HttpResponse, HttpResponseNotFound, HttpRes
 from api.types import HttpRequestMethods
 from api.utils import check_if_requesting_user_admin
 from api.responses import HttpResponseNoContent, JsonResponseCreated
+from shared.utils import paginate_queryset
 
 from ..models.author import Author
 from ..utils.authors import map_author_to_dict
@@ -14,7 +15,10 @@ def index(request: HttpRequest) -> HttpResponse:
 
     if is_requesting_user_admin:
         if request.method == HttpRequestMethods.get.value:
-            return JsonResponse(list(map(map_author_to_dict, Author.objects.all())), safe=False)
+            paginated_authors = paginate_queryset(
+                Author.objects.all(), request.GET)
+
+            return JsonResponse(list(map(map_author_to_dict, paginated_authors)), safe=False)
 
         if request.method == HttpRequestMethods.post.value:
             data = json.loads(request.body)

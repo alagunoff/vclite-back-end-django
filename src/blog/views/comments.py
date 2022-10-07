@@ -4,6 +4,7 @@ from django.http import HttpRequest, HttpResponse, HttpResponseNotFound, HttpRes
 from api.types import HttpRequestMethods
 from api.utils import check_if_requesting_user_admin
 from api.responses import HttpResponseNoContent, JsonResponseCreated
+from shared.utils import paginate_queryset
 
 from ..models.comment import Comment
 from ..models.post import Post
@@ -16,10 +17,12 @@ def index(request: HttpRequest, post_id: int) -> HttpResponse:
     except Post.DoesNotExist:
         return HttpResponseNotFound()
 
-    post_comments = Comment.objects.filter(post_id=post_id)
+    comments = Comment.objects.filter(post_id=post_id)
 
     if request.method == HttpRequestMethods.get.value:
-        return JsonResponse(list(map(map_comment_to_dict, post_comments)), safe=False)
+        paginated_comments = paginate_queryset(comments, request.GET)
+
+        return JsonResponse(list(map(map_comment_to_dict, paginated_comments)), safe=False)
 
     is_requesting_user_admin = check_if_requesting_user_admin(request)
 
@@ -30,7 +33,7 @@ def index(request: HttpRequest, post_id: int) -> HttpResponse:
             return JsonResponseCreated(map_comment_to_dict(created_comment))
 
         if request.method == HttpRequestMethods.delete.value:
-            post_comments.delete()
+            comments.delete()
 
             return HttpResponseNoContent()
 

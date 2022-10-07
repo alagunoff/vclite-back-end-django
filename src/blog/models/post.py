@@ -18,4 +18,4 @@ class Post(models.Model):
 
 class PostExtraImage(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
-    image = models.TextField()
+    image = models.CharField(max_length=900000)

@@ -4,14 +4,20 @@ from django.http import HttpRequest, HttpResponse, HttpResponseNotFound, HttpRes
 from api.types import HttpRequestMethods
 from api.utils import get_requesting_author, check_if_requesting_user_admin
 from api.responses import HttpResponseNoContent, JsonResponseCreated, JsonResponseForbidden
+from shared.utils import paginate_queryset
 
 from ..models.post import Post
-from ..utils.posts import create_post, map_post_to_dict, filter_posts
+from ..utils.posts import create_post, map_post_to_dict, filter_posts, sort_posts
 
 
 def index(request: HttpRequest) -> HttpResponse:
     if request.method == HttpRequestMethods.get.value:
-        return JsonResponse(list(map(map_post_to_dict, filter_posts(Post.objects.filter(is_draft=False), request.GET))), safe=False)
+        posts = Post.objects.filter(is_draft=False)
+        filtered_posts = filter_posts(posts, request.GET)
+        sorted_posts = sort_posts(filtered_posts, request.GET)
+        paginated_posts = paginate_queryset(sorted_posts, request.GET)
+
+        return JsonResponse(list(map(map_post_to_dict, paginated_posts)), safe=False)
 
     requesting_author = get_requesting_author(request)
 

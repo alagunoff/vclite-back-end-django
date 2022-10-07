@@ -1,5 +1,5 @@
 from typing import Any
-from django.db.models import QuerySet, Q
+from django.db.models import QuerySet, Q, Count
 from django.http import QueryDict
 
 from ..models.post import Post, PostExtraImage
@@ -73,9 +73,9 @@ def map_post_to_dict(post: Any) -> dict[str, Any]:
     if extra_images.exists():
         for extra_image in extra_images:
             if 'extra_images' in post_dict:
-                post_dict['extra_images'].append(extra_image)
+                post_dict['extra_images'].append(extra_image.image)
             else:
-                post_dict['extra_images'] = [extra_image]
+                post_dict['extra_images'] = [extra_image.image]
 
     return post_dict
 
@@ -110,7 +110,7 @@ def filter_posts(posts: QuerySet[Post], query_params: QueryDict) -> QuerySet[Pos
 
     if 'tags__in' in query_params:
         posts = posts.filter(tags__id__in=list(
-            map(int, query_params.getlist('tags__in')))).distinct()
+            map(int, query_params.getlist('tags__in'))))
 
     if 'tags__all' in query_params:
         for tag_id in query_params.getlist('tags__all'):
@@ -121,21 +121,34 @@ def filter_posts(posts: QuerySet[Post], query_params: QueryDict) -> QuerySet[Pos
         posts = posts.filter(Q(title__contains=search) | Q(content__contains=search) | Q(
             author__user__first_name=search) | Q(category__category=search) | Q(tags__tag=search))
 
-    ordering_field = query_params.get('order_by')
-    if ordering_field:
-        if ordering_field in ('creation_date', '-creation_date'):
-            posts = posts.order_by(ordering_field)
+    return posts
 
-        if ordering_field == 'author_name':
+
+def sort_posts(posts: QuerySet[Post], query_params: QueryDict) -> QuerySet[Post]:
+    sorting_field = query_params.get('sort_by')
+
+    if sorting_field:
+        if sorting_field in ('creation_date', '-creation_date'):
+            posts = posts.order_by(sorting_field)
+
+        if sorting_field == 'author_name':
             posts = posts.order_by('author__user__first_name')
 
-        if ordering_field == '-author_name':
+        if sorting_field == '-author_name':
             posts = posts.order_by('-author__user__first_name')
 
-        if ordering_field == 'category':
+        if sorting_field == 'category':
             posts = posts.order_by('category__category')
 
-        if ordering_field == '-category':
+        if sorting_field == '-category':
             posts = posts.order_by('-category__category')
 
-    return posts
+        if sorting_field == 'images':
+            posts = posts.annotate(extra_images_number=Count(
+                'postextraimage')).order_by('extra_images_number')
+
+        if sorting_field == '-images':
+            posts = posts.annotate(extra_images_number=Count(
+                'postextraimage')).order_by('-extra_images_number')
+
+    return posts.distinct()

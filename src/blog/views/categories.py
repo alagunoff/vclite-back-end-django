@@ -4,6 +4,7 @@ from django.http import HttpRequest, HttpResponse, HttpResponseNotFound, HttpRes
 from api.types import HttpRequestMethods
 from api.utils import check_if_requesting_user_admin
 from api.responses import HttpResponseNoContent, JsonResponseCreated
+from shared.utils import paginate_queryset
 
 from ..models.category import Category
 from ..utils.categories import map_category_to_dict
@@ -11,7 +12,10 @@ from ..utils.categories import map_category_to_dict
 
 def index(request: HttpRequest) -> HttpResponse:
     if request.method == HttpRequestMethods.get.value:
-        return JsonResponse(list(map(map_category_to_dict, Category.objects.filter(parent_category=None))), safe=False)
+        paginated_categories = paginate_queryset(
+            Category.objects.filter(parent_category=None), request.GET)
+
+        return JsonResponse(list(map(map_category_to_dict, paginated_categories)), safe=False)
 
     is_requesting_user_admin = check_if_requesting_user_admin(request)
 
