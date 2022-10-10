@@ -38,5 +38,5 @@ def index(request: HttpRequest, post_id: int) -> HttpResponse:
             return HttpResponseNoContent()
 
         return HttpResponseNotAllowed([HttpRequestMethods.get.value, HttpRequestMethods.post.value, HttpRequestMethods.delete.value])
-    else:
-        return HttpResponseNotAllowed([HttpRequestMethods.get.value])
+
+    return HttpResponseNotAllowed([HttpRequestMethods.get.value])

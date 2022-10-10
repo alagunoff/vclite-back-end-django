@@ -26,8 +26,8 @@ def index(request: HttpRequest) -> HttpResponse:
             return JsonResponseCreated(map_tag_to_dict(created_tag))
 
         return HttpResponseNotAllowed([HttpRequestMethods.get.value, HttpRequestMethods.post.value])
-    else:
-        return HttpResponseNotAllowed([HttpRequestMethods.get.value])
+
+    return HttpResponseNotAllowed([HttpRequestMethods.get.value])
 
 
 def detail(request: HttpRequest, tag_id: int) -> HttpResponse:
@@ -59,5 +59,5 @@ def detail(request: HttpRequest, tag_id: int) -> HttpResponse:
             HttpRequestMethods.put.value,
             HttpRequestMethods.delete.value
         ])
-    else:
-        return HttpResponseNotAllowed([HttpRequestMethods.get.value])
+
+    return HttpResponseNotAllowed([HttpRequestMethods.get.value])

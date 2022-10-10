@@ -16,8 +16,8 @@ def index(request: HttpRequest) -> HttpResponse:
 
         if requesting_user:
             return JsonResponse(map_user_to_dict(requesting_user))
-        else:
-            return HttpResponseNotFound()
+
+        return HttpResponseNotFound()
 
     if request.method == HttpRequestMethods.post.value:
         data = json.loads(request.body)
@@ -56,7 +56,7 @@ def login(request: HttpRequest) -> HttpResponse:
 
         if authenticated_user:
             return JsonResponse({'token': Token.objects.get(user=authenticated_user).token})
-        else:
-            return HttpResponseBadRequest()
+
+        return HttpResponseBadRequest()
 
     return HttpResponseNotAllowed([HttpRequestMethods.post.value])
