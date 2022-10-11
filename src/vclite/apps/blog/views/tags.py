@@ -1,10 +1,10 @@
 import json
 from django.http import HttpRequest, HttpResponse, HttpResponseNotFound, HttpResponseNotAllowed, JsonResponse
 
-from api.types import HttpRequestMethods
-from api.utils import check_if_requesting_user_admin
-from api.responses import HttpResponseNoContent, JsonResponseCreated
-from shared.utils import paginate_queryset
+from shared.types.api import HttpRequestMethods
+from shared.utils.api import check_if_requesting_user_admin
+from shared.responses import HttpResponseNoContent, JsonResponseCreated
+from shared.utils.queryset import paginate_queryset
 
 from ..models.tag import Tag
 from ..utils.tags import map_tag_to_dict

@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 '''
 Django settings for vclite project.
@@ -12,7 +13,6 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 '''
 
-from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-2$m7*79fx-*^9k6f63xa1!_sl$$ex$_vdso*0l9p8=5t30lqr+'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True if os.environ.get("DEBUG") == 'true' else False
+DEBUG = os.environ.get('DEBUG') == 'true'
 
 ALLOWED_HOSTS = ['*']
 
@@ -38,8 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    'users.apps.UsersConfig',
-    'blog.apps.BlogConfig'
+    'vclite.apps.users.apps.UsersConfig',
+    'vclite.apps.blog.apps.BlogConfig'
 ]
 
 

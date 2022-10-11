@@ -1,7 +1,7 @@
 from django.http import HttpRequest
 
-from users.models import User, Token
-from blog.models.author import Author
+from vclite.apps.users.models import User, Token
+from vclite.apps.blog.models.author import Author
 
 
 def get_requesting_user(request: HttpRequest) -> User | None:

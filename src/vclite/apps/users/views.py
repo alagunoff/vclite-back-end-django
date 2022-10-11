@@ -2,9 +2,9 @@ import json
 from django.http import HttpRequest, HttpResponse, JsonResponse, HttpResponseNotAllowed, HttpResponseNotFound, HttpResponseBadRequest
 from django.contrib.auth import authenticate
 
-from api.types import HttpRequestMethods
-from api.utils import get_requesting_user, check_if_requesting_user_admin
-from api.responses import HttpResponseNoContent, JsonResponseCreated
+from shared.types.api import HttpRequestMethods
+from shared.utils.api import get_requesting_user, check_if_requesting_user_admin
+from shared.responses import HttpResponseNoContent, JsonResponseCreated
 
 from .models import User, Token
 from .utils import map_user_to_dict
