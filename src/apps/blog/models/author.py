@@ -1,6 +1,6 @@
 from django.db import models
 
-from vclite.apps.users.models import User
+from apps.users.models import User
 
 
 class Author(models.Model):

@@ -38,8 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    'vclite.apps.users.apps.UsersConfig',
-    'vclite.apps.blog.apps.BlogConfig'
+    'apps.users.apps.UsersConfig',
+    'apps.blog.apps.BlogConfig'
 ]
 
 
@@ -52,7 +52,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'vclite.urls'
+ROOT_URLCONF = 'urls'
 
 TEMPLATES = [
     {
@@ -70,7 +70,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'vclite.wsgi.application'
+WSGI_APPLICATION = 'wsgi.application'
 
 
 # Database
