@@ -1,0 +1,27 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres
+    volumes:
+      - database:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_DB=vclite
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=1234
+  web:
+    build: .
+    command: python server/manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/vclite
+    ports:
+      - "8000:8000"
+    environment:
+      - POSTGRES_NAME=vclite
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=1234
+    depends_on:
+      - db
+
+volumes:
+  database:
