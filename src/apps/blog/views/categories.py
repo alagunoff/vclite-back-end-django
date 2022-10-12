@@ -1,73 +1,63 @@
-import json
-from django.http import HttpRequest, HttpResponse, HttpResponseNotFound, HttpResponseNotAllowed, JsonResponse
+from rest_framework import status
+from rest_framework.request import Request
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
 
-from shared.types_old.api import HttpRequestMethods
-from shared.utils import check_if_requesting_user_admin
-from shared.responses import HttpResponseNoContent, JsonResponseCreated
-from shared.utils_old.queryset import paginate_queryset
+from shared.types import HttpRequestMethods
+from shared.utils import check_if_requesting_user_admin, paginate_queryset
 
 from ..models.category import Category
-from ..utils.categories import map_category_to_dict
+from ..serializers.category import Category as CategorySerializer
 
 
-def index(request: HttpRequest) -> HttpResponse:
+@api_view([HttpRequestMethods.get.value, HttpRequestMethods.post.value])
+def index(request: Request) -> Response:
     if request.method == HttpRequestMethods.get.value:
-        paginated_categories = paginate_queryset(
-            Category.objects.filter(parent_category=None), request.GET)
+        paginator, paginated_categories = paginate_queryset(
+            Category.objects.filter(parent_category=None), request)
+        category_serializer = CategorySerializer(
+            paginated_categories, many=True)
 
-        return JsonResponse([map_category_to_dict(category) for category in paginated_categories], safe=False)
+        return paginator.get_paginated_response(category_serializer.data)
 
-    is_requesting_user_admin = check_if_requesting_user_admin(request)
+    if check_if_requesting_user_admin(request):
+        category_serializer = CategorySerializer(data=request.data)
+        category_serializer.is_valid(raise_exception=True)
+        category_serializer.save()
 
-    if is_requesting_user_admin:
-        if request.method == HttpRequestMethods.post.value:
-            data = json.loads(request.body)
-            created_category = Category.objects.create(
-                category=data.get('category'))
+        return Response(category_serializer.data, status=status.HTTP_201_CREATED)
 
-            return JsonResponseCreated(map_category_to_dict(created_category))
-
-        return HttpResponseNotAllowed([HttpRequestMethods.get.value, HttpRequestMethods.post.value])
-
-    return HttpResponseNotAllowed([HttpRequestMethods.get.value])
+    return Response(status=status.HTTP_404_NOT_FOUND)
 
 
-def detail(request: HttpRequest, category_id: int) -> HttpResponse:
+@api_view([HttpRequestMethods.get.value, HttpRequestMethods.post.value, HttpRequestMethods.put.value, HttpRequestMethods.delete.value])
+def detail(request: Request, category_id: int) -> Response:
     try:
-        category_for_dealing = Category.objects.get(id=category_id)
+        category = Category.objects.get(id=category_id)
     except Category.DoesNotExist:
-        return HttpResponseNotFound()
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
     if request.method == HttpRequestMethods.get.value:
-        return JsonResponse(map_category_to_dict(category_for_dealing))
+        return Response(CategorySerializer(category).data)
 
-    is_requesting_user_admin = check_if_requesting_user_admin(request)
-
-    if is_requesting_user_admin:
+    if check_if_requesting_user_admin(request):
         if request.method == HttpRequestMethods.post.value:
-            data = json.loads(request.body)
-            created_subcategory = Category.objects.create(
-                category=data.get('category'), parent_category=category_for_dealing)
+            category_serializer = CategorySerializer(data=request.data)
+            category_serializer.is_valid(raise_exception=True)
+            category_serializer.save(parent_category=category)
 
-            return JsonResponseCreated(map_category_to_dict(created_subcategory))
+            return Response(category_serializer.data, status=status.HTTP_201_CREATED)
 
         if request.method == HttpRequestMethods.put.value:
-            data = json.loads(request.body)
-            category_for_dealing.category = data.get('category')
-            category_for_dealing.save()
+            category_serializer = CategorySerializer(
+                category, data=request.data)
+            category_serializer.is_valid(raise_exception=True)
+            category_serializer.save()
 
-            return JsonResponse(map_category_to_dict(category_for_dealing))
+            return Response(category_serializer.data)
 
-        if request.method == HttpRequestMethods.delete.value:
-            category_for_dealing.delete()
+        category.delete()
 
-            return HttpResponseNoContent()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
-        return HttpResponseNotAllowed([
-            HttpRequestMethods.get.value,
-            HttpRequestMethods.post.value,
-            HttpRequestMethods.put.value,
-            HttpRequestMethods.delete.value
-        ])
-
-    return HttpResponseNotAllowed([HttpRequestMethods.get.value])
+    return Response(status=status.HTTP_404_NOT_FOUND)
