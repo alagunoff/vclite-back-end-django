@@ -1,19 +1,27 @@
 version: "3.9"
-
 services:
   db:
     image: postgres
+    restart: always
     env_file: .env.local
     volumes:
       - database:/var/lib/postgresql/data/
+    ports:
+      - 5432:5432
+  pgadmin:
+    image: dpage/pgadmin4
+    restart: always
+    env_file: .env.local
+    ports:
+      - 5050:80
   web:
     build: .
+    env_file: .env.local
     command: python src/manage.py runserver 0.0.0.0:8000
     volumes:
       - .:/vclite
     ports:
       - 8000:8000
-    env_file: .env.local
     depends_on:
       - db
 volumes:
