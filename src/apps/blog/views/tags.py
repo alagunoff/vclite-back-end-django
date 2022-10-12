@@ -1,63 +1,54 @@
-import json
-from django.http import HttpRequest, HttpResponse, HttpResponseNotFound, HttpResponseNotAllowed, JsonResponse
+from rest_framework import status
+from rest_framework.request import Request
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
 
-from shared.types.api import HttpRequestMethods
-from shared.utils.api import check_if_requesting_user_admin
-from shared.responses import HttpResponseNoContent, JsonResponseCreated
-from shared.utils.queryset import paginate_queryset
+from shared.types import HttpRequestMethods
+from shared.utils import check_if_requesting_user_admin, paginate_queryset
 
 from ..models.tag import Tag
-from ..utils.tags import map_tag_to_dict
+from ..serializers.tag import Tag as TagSerializer
 
 
-def index(request: HttpRequest) -> HttpResponse:
+@api_view([HttpRequestMethods.get.value, HttpRequestMethods.post.value])
+def index(request: Request) -> Response:
     if request.method == HttpRequestMethods.get.value:
-        paginated_tags = paginate_queryset(Tag.objects.all(), request.GET)
+        paginator, paginated_tags = paginate_queryset(
+            Tag.objects.all(), request)
+        tag_serializer = TagSerializer(paginated_tags, many=True)
 
-        return JsonResponse([map_tag_to_dict(tag) for tag in paginated_tags], safe=False)
+        return paginator.get_paginated_response(tag_serializer.data)
 
-    is_requesting_user_admin = check_if_requesting_user_admin(request)
+    if check_if_requesting_user_admin(request):
+        tag_serializer = TagSerializer(data=request.data)
+        tag_serializer.is_valid(raise_exception=True)
+        tag_serializer.save()
 
-    if is_requesting_user_admin:
-        if request.method == HttpRequestMethods.post.value:
-            data = json.loads(request.body)
-            created_tag = Tag.objects.create(tag=data.get('tag'))
+        return Response(tag_serializer.data)
 
-            return JsonResponseCreated(map_tag_to_dict(created_tag))
-
-        return HttpResponseNotAllowed([HttpRequestMethods.get.value, HttpRequestMethods.post.value])
-
-    return HttpResponseNotAllowed([HttpRequestMethods.get.value])
+    return Response(status=status.HTTP_404_NOT_FOUND)
 
 
-def detail(request: HttpRequest, tag_id: int) -> HttpResponse:
+@api_view([HttpRequestMethods.get.value, HttpRequestMethods.put.value, HttpRequestMethods.delete.value])
+def detail(request: Request, tag_id: int) -> Response:
     try:
-        tag_for_dealing = Tag.objects.get(id=tag_id)
+        tag = Tag.objects.get(id=tag_id)
     except Tag.DoesNotExist:
-        return HttpResponseNotFound()
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
     if request.method == HttpRequestMethods.get.value:
-        return JsonResponse(map_tag_to_dict(tag_for_dealing))
+        return Response(TagSerializer(tag).data)
 
-    is_requesting_user_admin = check_if_requesting_user_admin(request)
-
-    if is_requesting_user_admin:
+    if check_if_requesting_user_admin(request):
         if request.method == HttpRequestMethods.put.value:
-            data = json.loads(request.body)
-            tag_for_dealing.tag = data.get('tag')
-            tag_for_dealing.save()
+            tag_serializer = TagSerializer(tag, data=request.data)
+            tag_serializer.is_valid(raise_exception=True)
+            tag_serializer.save()
 
-            return JsonResponse(map_tag_to_dict(tag_for_dealing))
+            return Response(tag_serializer.data)
 
-        if request.method == HttpRequestMethods.delete.value:
-            tag_for_dealing.delete()
+        tag.delete()
 
-            return HttpResponseNoContent()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
-        return HttpResponseNotAllowed([
-            HttpRequestMethods.get.value,
-            HttpRequestMethods.put.value,
-            HttpRequestMethods.delete.value
-        ])
-
-    return HttpResponseNotAllowed([HttpRequestMethods.get.value])
+    return Response(status=status.HTTP_404_NOT_FOUND)

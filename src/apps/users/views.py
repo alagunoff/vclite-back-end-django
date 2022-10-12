@@ -3,10 +3,12 @@ from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
+from rest_framework.authtoken.models import Token
 
-from shared.types.api import HttpRequestMethods
+from shared.types import HttpRequestMethods
+from shared.utils import check_if_requesting_user_admin
 
-from .models import User, Token
+from .models import User
 from .serializers import User as UserSerializer
 
 
@@ -32,7 +34,7 @@ def detail(request: Request, user_id: int) -> Response:
     except User.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
-    if request.user.is_authenticated and request.user.is_admin:
+    if check_if_requesting_user_admin(request):
         user.delete()
 
         return Response(status=status.HTTP_204_NO_CONTENT)

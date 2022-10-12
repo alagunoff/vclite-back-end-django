@@ -1,5 +1,6 @@
-from collections import OrderedDict
 from rest_framework import serializers
+
+from shared.utils import filter_out_none_values
 
 from .models import User as UserModel
 
@@ -11,6 +12,4 @@ class User(serializers.ModelSerializer):
                   'avatar', 'creation_date', 'is_admin', 'last_login']
 
     def to_representation(self, instance):
-        result = super().to_representation(instance)
-
-        return OrderedDict([(key, result[key]) for key in result if result[key] is not None])
+        return filter_out_none_values(super().to_representation(instance))

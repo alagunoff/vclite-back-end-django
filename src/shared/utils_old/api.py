@@ -27,9 +27,3 @@ def get_requesting_author(request: HttpRequest) -> Author | None:
             return None
 
     return None
-
-
-def check_if_requesting_user_admin(request: HttpRequest) -> bool:
-    user = get_requesting_user(request)
-
-    return bool(user and user.is_admin)
