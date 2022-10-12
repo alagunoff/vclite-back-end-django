@@ -24,7 +24,7 @@ def index(request: Request) -> Response:
     user_serializer.is_valid(raise_exception=True)
     created_user = User.objects.create_user(**user_serializer.validated_data)
 
-    return Response(UserSerializer(created_user).data)
+    return Response(UserSerializer(created_user).data, status=status.HTTP_201_CREATED)
 
 
 @api_view([HttpRequestMethods.delete.value])
