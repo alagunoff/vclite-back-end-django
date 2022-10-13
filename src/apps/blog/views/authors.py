@@ -1,64 +1,55 @@
-import json
-from django.http import HttpRequest, HttpResponse, HttpResponseNotFound, HttpResponseNotAllowed, JsonResponse
+from rest_framework import status
+from rest_framework.request import Request
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
 
 from shared.types_old.api import HttpRequestMethods
-from shared.utils import check_if_requesting_user_admin
-from shared.responses import HttpResponseNoContent, JsonResponseCreated
-from shared.utils_old.queryset import paginate_queryset
+from shared.utils import check_if_requesting_user_admin, paginate_queryset
 
 from ..models.author import Author
-from ..utils.authors import map_author_to_dict
+from ..serializers.author import Author as AuthorSerializer
 
 
-def index(request: HttpRequest) -> HttpResponse:
-    is_requesting_user_admin = check_if_requesting_user_admin(request)
-
-    if is_requesting_user_admin:
+@api_view([HttpRequestMethods.get.value, HttpRequestMethods.post.value])
+def index(request: Request) -> Response:
+    if check_if_requesting_user_admin(request):
         if request.method == HttpRequestMethods.get.value:
-            paginated_authors = paginate_queryset(
-                Author.objects.all(), request.GET)
+            paginator, paginated_authors = paginate_queryset(
+                Author.objects.all(), request)
+            author_serializer = AuthorSerializer(paginated_authors, many=True)
 
-            return JsonResponse([map_author_to_dict(author) for author in paginated_authors], safe=False)
+            return paginator.get_paginated_response(author_serializer.data)
 
-        if request.method == HttpRequestMethods.post.value:
-            data = json.loads(request.body)
-            created_author = Author.objects.create(
-                description=data.get('description'), user_id=data.get('user_id'))
+        author_serializer = AuthorSerializer(data=request.data)
+        author_serializer.is_valid(raise_exception=True)
+        author_serializer.save()
 
-            return JsonResponseCreated(map_author_to_dict(created_author))
+        return Response(author_serializer.data, status=status.HTTP_201_CREATED)
 
-        return HttpResponseNotAllowed([HttpRequestMethods.get.value, HttpRequestMethods.post.value])
-
-    return HttpResponseNotFound()
+    return Response(status=status.HTTP_404_NOT_FOUND)
 
 
-def detail(request: HttpRequest, author_id: int) -> HttpResponse:
-    try:
-        author_for_dealing = Author.objects.get(id=author_id)
-    except Author.DoesNotExist:
-        return HttpResponseNotFound()
-    is_requesting_user_admin = check_if_requesting_user_admin(request)
+@api_view([HttpRequestMethods.get.value, HttpRequestMethods.patch.value, HttpRequestMethods.delete.value])
+def detail(request: Request, author_id: int) -> Response:
+    if check_if_requesting_user_admin(request):
+        try:
+            author = Author.objects.get(id=author_id)
+        except Author.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
-    if is_requesting_user_admin:
         if request.method == HttpRequestMethods.get.value:
-            return JsonResponse(map_author_to_dict(author_for_dealing))
+            return Response(AuthorSerializer(author).data)
 
         if request.method == HttpRequestMethods.patch.value:
-            data = json.loads(request.body)
-            author_for_dealing.description = data.get('description')
-            author_for_dealing.save()
+            author_serializer = AuthorSerializer(
+                author, data=request.data, partial=True)
+            author_serializer.is_valid(raise_exception=True)
+            author_serializer.save()
 
-            return JsonResponse(map_author_to_dict(author_for_dealing))
+            return Response(author_serializer.data)
 
-        if request.method == HttpRequestMethods.delete.value:
-            author_for_dealing.delete()
+        author.delete()
 
-            return HttpResponseNoContent()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
-        return HttpResponseNotAllowed([
-            HttpRequestMethods.get.value,
-            HttpRequestMethods.patch.value,
-            HttpRequestMethods.delete.value
-        ])
-
-    return HttpResponseNotFound()
+    return Response(status=status.HTTP_404_NOT_FOUND)
