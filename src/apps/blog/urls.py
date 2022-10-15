@@ -7,7 +7,7 @@ urlpatterns = [
     path('/posts/<int:post_id>', posts.detail),
     path('/posts/<int:post_id>/comments', comments.index),
     path('/drafts', drafts.index),
-    path('/drafts/<int:post_id>', drafts.detail),
+    path('/drafts/<int:draft_id>', drafts.detail),
     path('/authors', authors.index),
     path('/authors/<int:author_id>', authors.detail),
     path('/categories', categories.index),

@@ -1,59 +1,60 @@
-import json
-from django.http import HttpRequest, HttpResponse, HttpResponseNotFound, HttpResponseNotAllowed, JsonResponse
+from rest_framework import status
+from rest_framework.request import Request
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
 
-from shared.types_old.api import HttpRequestMethods
-from shared.utils import check_if_requesting_user_admin
-from shared.utils_old.api import get_requesting_author
-from shared.responses import HttpResponseNoContent, JsonResponseCreated, JsonResponseForbidden
-from shared.utils_old.queryset import paginate_queryset
+from shared.types import HttpRequestMethods
+from shared.utils import check_if_requesting_user_admin, get_requesting_author, paginate_queryset
 
 from ..models.post import Post
-from ..utils.posts import create_post, map_post_to_dict, filter_posts, sort_posts
+from ..serializers.post import Post as PostSerializer
+from ..utils import filter_posts, sort_posts
 
 
-def index(request: HttpRequest) -> HttpResponse:
+@api_view([HttpRequestMethods.get.value, HttpRequestMethods.post.value])
+def index(request: Request) -> Response:
     if request.method == HttpRequestMethods.get.value:
         posts = Post.objects.filter(is_draft=False)
-        filtered_posts = filter_posts(posts, request.GET)
-        sorted_posts = sort_posts(filtered_posts, request.GET)
-        paginated_posts = paginate_queryset(sorted_posts, request.GET)
+        filtered_posts = filter_posts(posts, request.query_params)
+        sorted_posts = sort_posts(filtered_posts, request.query_params)
+        paginator, paginated_posts = paginate_queryset(sorted_posts, request)
+        post_serializer = PostSerializer(paginated_posts, many=True)
 
-        return JsonResponse([map_post_to_dict(post) for post in paginated_posts], safe=False)
+        return paginator.get_paginated_response(post_serializer.data)
 
     requesting_author = get_requesting_author(request)
 
-    if request.method == HttpRequestMethods.post.value:
-        if requesting_author:
-            created_post = create_post(
-                json.loads(request.body), requesting_author)
+    if requesting_author:
+        post_serializer = PostSerializer(data=request.data)
+        post_serializer.is_valid(raise_exception=True)
+        post_serializer.save(author_id=requesting_author.id)
 
-            return JsonResponseCreated(map_post_to_dict(created_post))
+        return Response(post_serializer.data, status=status.HTTP_201_CREATED)
 
-        return JsonResponseForbidden({'error': 'only authors can create posts'})
-
-    return HttpResponseNotAllowed([HttpRequestMethods.get.value, HttpRequestMethods.post.value])
+    return Response({'error': 'only authors can create posts'}, status=status.HTTP_403_FORBIDDEN)
 
 
-def detail(request: HttpRequest, post_id: int) -> HttpResponse:
+@api_view([HttpRequestMethods.get.value, HttpRequestMethods.patch.value, HttpRequestMethods.delete.value])
+def detail(request: Request, post_id: int) -> Response:
     try:
-        post_for_dealing = Post.objects.get(id=post_id, is_draft=False)
+        post = Post.objects.get(id=post_id, is_draft=False)
     except Post.DoesNotExist:
-        return HttpResponseNotFound()
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
     if request.method == HttpRequestMethods.get.value:
-        return JsonResponse(map_post_to_dict(post_for_dealing))
+        return Response(PostSerializer(post).data)
 
-    is_requesting_user_admin = check_if_requesting_user_admin(request)
+    if check_if_requesting_user_admin(request):
+        if request.method == HttpRequestMethods.patch.value:
+            post_serializer = PostSerializer(
+                post, data=request.data, partial=True)
+            post_serializer.is_valid(raise_exception=True)
+            post_serializer.save()
 
-    if is_requesting_user_admin:
-        if request.method == HttpRequestMethods.delete.value:
-            post_for_dealing.delete()
+            return Response(post_serializer.data)
 
-            return HttpResponseNoContent()
+        post.delete()
 
-        return HttpResponseNotAllowed([
-            HttpRequestMethods.get.value,
-            HttpRequestMethods.delete.value
-        ])
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
-    return HttpResponseNotAllowed([HttpRequestMethods.get.value])
+    return Response(status=status.HTTP_404_NOT_FOUND)

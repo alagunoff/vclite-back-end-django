@@ -7,12 +7,12 @@ from .constants import DEFAULT_USER_BASE64_AVATAR
 
 class UserManager(BaseUserManager):
     def create_user(self, **kwargs) -> 'User':
-        if not 'avatar' in kwargs:
-            kwargs['avatar'] = DEFAULT_USER_BASE64_AVATAR
+        del kwargs['password']
 
         user = self.model(**kwargs)
         user.set_password(kwargs.get('password'))
         user.save(using=self.db)
+
         Token.objects.create(user=user)
 
         return user
@@ -34,7 +34,8 @@ class User(AbstractBaseUser):
     first_name = models.CharField(max_length=30)
     last_name = models.CharField(
         max_length=30, blank=True, null=True)
-    avatar = models.CharField(max_length=900000, blank=True)
+    avatar = models.CharField(
+        max_length=900000, default=DEFAULT_USER_BASE64_AVATAR)
     creation_date = models.DateTimeField(auto_now_add=True)
     is_admin = models.BooleanField(default=False)
 

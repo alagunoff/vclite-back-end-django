@@ -1,56 +1,57 @@
-import json
-from django.http import HttpRequest, HttpResponse, HttpResponseNotFound, HttpResponseNotAllowed, JsonResponse
+from rest_framework import status
+from rest_framework.request import Request
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
 
-from shared.types_old.api import HttpRequestMethods
-from shared.utils_old.api import get_requesting_author
-from shared.responses import HttpResponseNoContent, JsonResponseCreated, JsonResponseForbidden
-from shared.utils_old.queryset import paginate_queryset
+from shared.types import HttpRequestMethods
+from shared.utils import get_requesting_author, paginate_queryset
 
 from ..models.post import Post
-from ..utils.posts import create_post, update_post, map_post_to_dict
+from ..serializers.post import Post as PostSerializer
 
 
-def index(request: HttpRequest) -> HttpResponse:
+@api_view([HttpRequestMethods.get.value, HttpRequestMethods.post.value])
+def index(request: Request) -> Response:
     requesting_author = get_requesting_author(request)
 
     if request.method == HttpRequestMethods.get.value:
-        paginated_drafts = paginate_queryset(Post.objects.filter(
-            author=requesting_author, is_draft=True), request.GET)
+        paginator, paginated_drafts = paginate_queryset(Post.objects.filter(
+            author=requesting_author, is_draft=True), request)
+        post_serializer = PostSerializer(paginated_drafts, many=True)
 
-        return JsonResponse([map_post_to_dict(draft) for draft in paginated_drafts], safe=False)
+        return paginator.get_paginated_response(post_serializer.data)
 
-    if request.method == HttpRequestMethods.post.value:
-        if requesting_author:
-            created_post = create_post(
-                json.loads(request.body), requesting_author, True)
+    if requesting_author:
+        post_serializer = PostSerializer(data=request.data)
+        post_serializer.is_valid(raise_exception=True)
+        post_serializer.save(author=requesting_author)
 
-            return JsonResponseCreated(map_post_to_dict(created_post))
+        return Response(post_serializer.data, status=status.HTTP_201_CREATED)
 
-        return JsonResponseForbidden({'error': 'only authors can create drafts'})
-
-    return HttpResponseNotAllowed([HttpRequestMethods.get.value, HttpRequestMethods.post.value])
+    return Response({'error': 'only authors can create drafts'}, status=status.HTTP_403_FORBIDDEN)
 
 
-def detail(request: HttpRequest, post_id: int) -> HttpResponse:
+@api_view([HttpRequestMethods.get.value, HttpRequestMethods.patch.value, HttpRequestMethods.delete.value])
+def detail(request: Request, draft_id: int) -> Response:
     requesting_author = get_requesting_author(request)
 
     try:
-        post_for_dealing = Post.objects.get(
-            id=post_id, author=requesting_author, is_draft=True)
+        draft = Post.objects.get(
+            id=draft_id, author=requesting_author, is_draft=True)
     except Post.DoesNotExist:
-        return HttpResponseNotFound()
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
     if request.method == HttpRequestMethods.get.value:
-        return JsonResponse(map_post_to_dict(post_for_dealing))
+        return Response(PostSerializer(draft).data)
 
     if request.method == HttpRequestMethods.patch.value:
-        update_post(post_for_dealing, json.loads(request.body))
+        post_serializer = PostSerializer(
+            draft, data=request.data, partial=True)
+        post_serializer.is_valid(raise_exception=True)
+        post_serializer.save()
 
-        return JsonResponse(map_post_to_dict(post_for_dealing))
+        return Response(post_serializer.data)
 
-    if request.method == HttpRequestMethods.delete.value:
-        post_for_dealing.delete()
+    draft.delete()
 
-        return HttpResponseNoContent()
-
-    return HttpResponseNotAllowed([HttpRequestMethods.get.value, HttpRequestMethods.patch.value, HttpRequestMethods.delete.value])
+    return Response(status=status.HTTP_204_NO_CONTENT)

@@ -44,7 +44,7 @@ def detail(request: Request, category_id: int) -> Response:
         if request.method == HttpRequestMethods.post.value:
             category_serializer = CategorySerializer(data=request.data)
             category_serializer.is_valid(raise_exception=True)
-            category_serializer.save(parent_category=category)
+            category_serializer.save(parent_category_id=category_id)
 
             return Response(category_serializer.data, status=status.HTTP_201_CREATED)
 

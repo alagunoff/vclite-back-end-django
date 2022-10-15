@@ -3,7 +3,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 
-from shared.types_old.api import HttpRequestMethods
+from shared.types import HttpRequestMethods
 from shared.utils import check_if_requesting_user_admin, paginate_queryset
 
 from ..models.author import Author

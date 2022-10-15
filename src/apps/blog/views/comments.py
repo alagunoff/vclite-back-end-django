@@ -1,42 +1,41 @@
-import json
-from django.http import HttpRequest, HttpResponse, HttpResponseNotFound, HttpResponseNotAllowed, JsonResponse
+from rest_framework import status
+from rest_framework.request import Request
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
 
-from shared.types_old.api import HttpRequestMethods
-from shared.utils import check_if_requesting_user_admin
-from shared.responses import HttpResponseNoContent, JsonResponseCreated
-from shared.utils_old.queryset import paginate_queryset
+from shared.types import HttpRequestMethods
+from shared.utils import check_if_requesting_user_admin, paginate_queryset
 
 from ..models.comment import Comment
 from ..models.post import Post
-from ..utils.comments import create_comment, map_comment_to_dict
+from ..serializers.comment import Comment as CommentSerializer
 
 
-def index(request: HttpRequest, post_id: int) -> HttpResponse:
+@api_view([HttpRequestMethods.get.value, HttpRequestMethods.post.value, HttpRequestMethods.delete.value])
+def index(request: Request, post_id: int) -> Response:
     try:
         Post.objects.get(id=post_id)
     except Post.DoesNotExist:
-        return HttpResponseNotFound()
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
     comments = Comment.objects.filter(post_id=post_id)
 
     if request.method == HttpRequestMethods.get.value:
-        paginated_comments = paginate_queryset(comments, request.GET)
+        paginator, paginated_comments = paginate_queryset(comments, request)
+        comment_serializer = CommentSerializer(paginated_comments, many=True)
 
-        return JsonResponse([map_comment_to_dict(comment) for comment in paginated_comments], safe=False)
+        return paginator.get_paginated_response(comment_serializer.data)
 
-    is_requesting_user_admin = check_if_requesting_user_admin(request)
-
-    if is_requesting_user_admin:
+    if check_if_requesting_user_admin(request):
         if request.method == HttpRequestMethods.post.value:
-            created_comment = create_comment(json.loads(request.body), post_id)
+            comment_serializer = CommentSerializer(data=request.data)
+            comment_serializer.is_valid(raise_exception=True)
+            comment_serializer.save(post_id=post_id)
 
-            return JsonResponseCreated(map_comment_to_dict(created_comment))
+            return Response(comment_serializer.data)
 
-        if request.method == HttpRequestMethods.delete.value:
-            comments.delete()
+        comments.delete()
 
-            return HttpResponseNoContent()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
-        return HttpResponseNotAllowed([HttpRequestMethods.get.value, HttpRequestMethods.post.value, HttpRequestMethods.delete.value])
-
-    return HttpResponseNotAllowed([HttpRequestMethods.get.value])
+    return Response(status=status.HTTP_404_NOT_FOUND)

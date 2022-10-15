@@ -8,12 +8,12 @@ class Category(serializers.ModelSerializer):
         model = CategoryModel
         fields = ['id', 'category']
 
-    def to_representation(self, instance):
-        category = super().to_representation(instance)
-        subcategories = instance.subcategories.all()
+    def to_representation(self, category):
+        serialized_category = super().to_representation(category)
 
+        subcategories = category.subcategories.all()
         if subcategories.exists():
-            category['subcategories'] = Category(
+            serialized_category['subcategories'] = Category(
                 subcategories, many=True).data
 
-        return category
+        return serialized_category
