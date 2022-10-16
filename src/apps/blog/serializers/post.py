@@ -3,7 +3,6 @@ from rest_framework import serializers
 from shared.utils import filter_out_none_values
 
 from ..models.post import Post as PostModel, PostExtraImage
-from ..models.comment import Comment
 from .author import Author as AuthorSerializer
 from .category import Category as CategorySerializer
 from .tag import Tag as TagSerializer
@@ -46,7 +45,7 @@ class Post(serializers.ModelSerializer):
         serialized_post['tags'] = TagSerializer(
             post.tags.all(), many=True).data
 
-        extra_images = PostExtraImage.objects.filter(post_id=post.id)
+        extra_images = post.extra_images.all()
         if extra_images.exists():
             for extra_image in extra_images:
                 if 'extra_images' in serialized_post:
@@ -54,7 +53,7 @@ class Post(serializers.ModelSerializer):
                 else:
                     serialized_post['extra_images'] = [extra_image.image]
 
-        comments = Comment.objects.filter(post_id=post.id)
+        comments = post.comments.all()
         if comments.exists():
             serialized_post['comments'] = CommentSerializer(
                 comments, many=True).data

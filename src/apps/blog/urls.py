@@ -1,17 +1,29 @@
-from django.urls import path
+from django.urls import path, include
 
 from .views import posts, drafts, comments, authors, categories, tags
 
 urlpatterns = [
-    path('/posts', posts.index),
-    path('/posts/<int:post_id>', posts.detail),
-    path('/posts/<int:post_id>/comments', comments.index),
-    path('/drafts', drafts.index),
-    path('/drafts/<int:draft_id>', drafts.detail),
-    path('/authors', authors.index),
-    path('/authors/<int:author_id>', authors.detail),
-    path('/categories', categories.index),
-    path('/categories/<int:category_id>', categories.detail),
-    path('/tags', tags.index),
-    path('/tags/<int:tag_id>', tags.detail),
+    path('/posts', include([
+        path('', posts.index),
+        path('/<int:post_id>', include([
+            path('', posts.detail),
+            path('/comments', comments.index),
+        ])),
+    ])),
+    path('/drafts', include([
+        path('', drafts.index),
+        path('/<int:draft_id>', drafts.detail),
+    ])),
+    path('/authors', include([
+        path('', authors.index),
+        path('/<int:author_id>', authors.detail),
+    ])),
+    path('/categories', include([
+        path('', categories.index),
+        path('/<int:category_id>', categories.detail),
+    ])),
+    path('/tags', include([
+        path('', tags.index),
+        path('/<int:tag_id>', tags.detail),
+    ])),
 ]

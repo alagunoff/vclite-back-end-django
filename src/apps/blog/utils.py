@@ -49,30 +49,30 @@ def filter_posts(posts: QuerySet[Post], query_params: QueryDict) -> QuerySet[Pos
 
 
 def sort_posts(posts: QuerySet[Post], query_params: QueryDict) -> QuerySet[Post]:
-    sorting_field = query_params.get('sort_by')
+    queried_sorting_field = query_params.get('sort_by')
 
-    if sorting_field:
-        if sorting_field in ('creation_date', '-creation_date'):
-            posts = posts.order_by(sorting_field)
+    if queried_sorting_field:
+        if queried_sorting_field in ('creation_date', '-creation_date'):
+            posts = posts.order_by(queried_sorting_field)
 
-        if sorting_field == 'author_name':
+        if queried_sorting_field == 'author_name':
             posts = posts.order_by('author__user__first_name')
 
-        if sorting_field == '-author_name':
+        if queried_sorting_field == '-author_name':
             posts = posts.order_by('-author__user__first_name')
 
-        if sorting_field == 'category':
+        if queried_sorting_field == 'category':
             posts = posts.order_by('category__category')
 
-        if sorting_field == '-category':
+        if queried_sorting_field == '-category':
             posts = posts.order_by('-category__category')
 
-        if sorting_field == 'images':
+        if queried_sorting_field == 'images':
             posts = posts.annotate(extra_images_number=Count(
-                'postextraimage')).order_by('extra_images_number')
+                'extra_images')).order_by('extra_images_number')
 
-        if sorting_field == '-images':
+        if queried_sorting_field == '-images':
             posts = posts.annotate(extra_images_number=Count(
-                'postextraimage')).order_by('-extra_images_number')
+                'extra_images')).order_by('-extra_images_number')
 
     return posts.distinct()

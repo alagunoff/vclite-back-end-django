@@ -21,11 +21,11 @@ def get_requesting_author(request: Request) -> Author | None:
     return None
 
 
-def filter_out_none_values(ordered_dict: OrderedDict) -> OrderedDict:
+def filter_out_none_values(ordered_dict: OrderedDict[str, str]) -> OrderedDict[str, str]:
     return OrderedDict([(key, ordered_dict[key]) for key in ordered_dict if ordered_dict[key] is not None])
 
 
-def paginate_queryset(queryset: QuerySet[Any], request: Request) -> tuple[LimitOffsetPagination, QuerySet[Any]]:
+def paginate_queryset(queryset: QuerySet[Any], request: Request) -> tuple[LimitOffsetPagination, list[Any]]:
     paginator = LimitOffsetPagination()
 
     return paginator, paginator.paginate_queryset(queryset, request)

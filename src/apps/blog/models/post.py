@@ -11,7 +11,7 @@ class Post(models.Model):
     content = models.TextField()
     author = models.ForeignKey(Author, on_delete=models.CASCADE)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
-    tags = models.ManyToManyField(Tag)
+    tags = models.ManyToManyField(Tag, related_name='posts')
     creation_date = models.DateField(auto_now_add=True)
     image = models.CharField(
         max_length=900000, default=DEFAULT_POST_BASE64_IMAGE)
@@ -20,7 +20,11 @@ class Post(models.Model):
     class Meta:
         ordering = ['id']
 
+    def __str__(self) -> str:
+        return self.title
+
 
 class PostExtraImage(models.Model):
-    post = models.ForeignKey(Post, on_delete=models.CASCADE)
     image = models.CharField(max_length=900000)
+    post = models.ForeignKey(
+        Post, related_name='extra_images', on_delete=models.CASCADE)
