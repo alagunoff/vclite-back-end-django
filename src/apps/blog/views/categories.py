@@ -25,7 +25,7 @@ def index(request: Request) -> Response:
         category_serializer.is_valid(raise_exception=True)
         category_serializer.save()
 
-        return Response(category_serializer.validated_data, status=status.HTTP_201_CREATED)
+        return Response(category_serializer.data, status=status.HTTP_201_CREATED)
 
     return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -46,7 +46,7 @@ def detail(request: Request, category_id: int) -> Response:
             category_serializer.is_valid(raise_exception=True)
             category_serializer.save(parent_category_id=category_id)
 
-            return Response(category_serializer.validated_data, status=status.HTTP_201_CREATED)
+            return Response(category_serializer.data, status=status.HTTP_201_CREATED)
 
         if request.method == HttpRequestMethods.put.value:
             category_serializer = CategorySerializer(
@@ -54,7 +54,7 @@ def detail(request: Request, category_id: int) -> Response:
             category_serializer.is_valid(raise_exception=True)
             category_serializer.save()
 
-            return Response(category_serializer.validated_data)
+            return Response(category_serializer.data)
 
         category.delete()
 

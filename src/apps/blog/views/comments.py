@@ -32,7 +32,7 @@ def index(request: Request, post_id: int) -> Response:
             comment_serializer.is_valid(raise_exception=True)
             comment_serializer.save(post_id=post_id)
 
-            return Response(comment_serializer.validated_data)
+            return Response(comment_serializer.data)
 
         comments.delete()
 

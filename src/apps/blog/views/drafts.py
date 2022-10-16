@@ -26,7 +26,7 @@ def index(request: Request) -> Response:
         post_serializer.is_valid(raise_exception=True)
         post_serializer.save(author=requesting_author)
 
-        return Response(post_serializer.validated_data, status=status.HTTP_201_CREATED)
+        return Response(post_serializer.data, status=status.HTTP_201_CREATED)
 
     return Response({'error': 'only authors can create drafts'}, status=status.HTTP_403_FORBIDDEN)
 
@@ -50,7 +50,7 @@ def detail(request: Request, draft_id: int) -> Response:
         post_serializer.is_valid(raise_exception=True)
         post_serializer.save()
 
-        return Response(post_serializer.validated_data)
+        return Response(post_serializer.data)
 
     draft.delete()
 

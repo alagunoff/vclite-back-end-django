@@ -24,7 +24,7 @@ def index(request: Request) -> Response:
         tag_serializer.is_valid(raise_exception=True)
         tag_serializer.save()
 
-        return Response(tag_serializer.validated_data, status=status.HTTP_201_CREATED)
+        return Response(tag_serializer.data, status=status.HTTP_201_CREATED)
 
     return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -45,7 +45,7 @@ def detail(request: Request, tag_id: int) -> Response:
             tag_serializer.is_valid(raise_exception=True)
             tag_serializer.save()
 
-            return Response(tag_serializer.validated_data)
+            return Response(tag_serializer.data)
 
         tag.delete()
 
