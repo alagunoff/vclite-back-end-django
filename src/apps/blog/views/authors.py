@@ -24,7 +24,7 @@ def index(request: Request) -> Response:
         author_serializer.is_valid(raise_exception=True)
         author_serializer.save()
 
-        return Response(author_serializer.data, status=status.HTTP_201_CREATED)
+        return Response(author_serializer.validated_data, status=status.HTTP_201_CREATED)
 
     return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -46,7 +46,7 @@ def detail(request: Request, author_id: int) -> Response:
             author_serializer.is_valid(raise_exception=True)
             author_serializer.save()
 
-            return Response(author_serializer.data)
+            return Response(author_serializer.validated_data)
 
         author.delete()
 
