@@ -28,3 +28,6 @@ class PostExtraImage(models.Model):
     image = models.CharField(max_length=900000)
     post = models.ForeignKey(
         Post, related_name='extra_images', on_delete=models.CASCADE)
+
+    def __str__(self) -> str:
+        return f'Extra image for post "{self.post.title}" ({self.id})'

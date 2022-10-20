@@ -9,7 +9,8 @@ class User(serializers.ModelSerializer):
     class Meta:
         model = UserModel
         fields = ['id', 'username', 'password', 'first_name', 'last_name',
-                  'avatar', 'creation_date', 'is_admin']
+                  'avatar', 'creation_date', 'is_admin', 'is_superuser']
+        read_only_fields = ['creation_date', 'is_admin', 'is_superuser']
 
     def to_representation(self, user):
         return refine_serialized_model(super().to_representation(user))

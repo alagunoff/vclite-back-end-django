@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import BaseUserManager, AbstractBaseUser
+from django.contrib.auth.models import BaseUserManager, AbstractBaseUser, PermissionsMixin
 from rest_framework.authtoken.models import Token
 
 from .constants import DEFAULT_USER_BASE64_AVATAR
@@ -9,7 +9,7 @@ class UserManager(BaseUserManager):
     def create_user(self, **kwargs) -> 'User':
         del kwargs['password']
 
-        user = self.model(**kwargs)
+        user: User = self.model(**kwargs)
         user.set_password(kwargs.get('password'))
         user.save(using=self.db)
 
@@ -17,19 +17,20 @@ class UserManager(BaseUserManager):
 
         return user
 
-    def create_superuser(self, username, first_name, password):
+    def create_superuser(self, username, first_name, password) -> 'User':
         user = self.create_user(
             username=username,
             password=password,
             first_name=first_name,
         )
         user.is_admin = True
+        user.is_superuser = True
         user.save(using=self._db)
 
         return user
 
 
-class User(AbstractBaseUser):
+class User(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(max_length=30, unique=True)
     first_name = models.CharField(max_length=30)
     last_name = models.CharField(
@@ -43,3 +44,7 @@ class User(AbstractBaseUser):
 
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['first_name']
+
+    @property
+    def is_staff(self) -> bool:
+        return self.is_admin
