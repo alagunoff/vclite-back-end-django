@@ -4,26 +4,26 @@ from .views import posts, drafts, comments, authors, categories, tags
 
 urlpatterns = [
     path('/posts', include([
-        path('', posts.index),
+        path('', posts.Index.as_view()),
         path('/<int:post_id>', include([
-            path('', posts.detail),
-            path('/comments', comments.index),
+            path('', posts.Detail.as_view()),
+            path('/comments', comments.Index.as_view()),
         ])),
     ])),
     path('/drafts', include([
-        path('', drafts.index),
-        path('/<int:draft_id>', drafts.detail),
+        path('', drafts.Index.as_view()),
+        path('/<int:draft_id>', drafts.Detail.as_view()),
     ])),
     path('/authors', include([
-        path('', authors.index),
-        path('/<int:author_id>', authors.detail),
+        path('', authors.Index.as_view()),
+        path('/<int:author_id>', authors.Detail.as_view()),
     ])),
     path('/categories', include([
-        path('', categories.index),
-        path('/<int:category_id>', categories.detail),
+        path('', categories.Index.as_view()),
+        path('/<int:category_id>', categories.Detail.as_view()),
     ])),
     path('/tags', include([
-        path('', tags.index),
-        path('/<int:tag_id>', tags.detail),
+        path('', tags.Index.as_view()),
+        path('/<int:tag_id>', tags.Detail.as_view()),
     ])),
 ]

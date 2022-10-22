@@ -1,5 +1,5 @@
 from django.contrib.auth import authenticate
-from rest_framework.status import HTTP_404_NOT_FOUND, HTTP_400_BAD_REQUEST
+from rest_framework.status import HTTP_201_CREATED, HTTP_404_NOT_FOUND, HTTP_400_BAD_REQUEST
 from rest_framework.generics import GenericAPIView
 from rest_framework.mixins import CreateModelMixin, DestroyModelMixin
 from rest_framework.request import Request
@@ -9,14 +9,13 @@ from rest_framework.authtoken.models import Token
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 
-
 from shared.permissions import IsAdmin
 
 from .models import User
 from .serializers import User as UserSerializer
 
 
-class IndexView(GenericAPIView, CreateModelMixin):
+class Index(GenericAPIView, CreateModelMixin):
     serializer_class = UserSerializer
 
     @swagger_auto_schema(responses={200: openapi.Response('user', UserSerializer)})
@@ -29,8 +28,14 @@ class IndexView(GenericAPIView, CreateModelMixin):
     def post(self, request: Request, *args, **kwargs) -> Response:
         return self.create(request, args, kwargs)
 
+    def perform_create(self, serializer):
+        User.objects.create_user(**serializer.validated_data)
+        headers = self.get_success_headers(serializer.data)
 
-class DetailView(GenericAPIView, DestroyModelMixin):
+        return Response(serializer.data, status=HTTP_201_CREATED, headers=headers)
+
+
+class Detail(GenericAPIView, DestroyModelMixin):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     lookup_url_kwarg = 'user_id'
@@ -40,7 +45,7 @@ class DetailView(GenericAPIView, DestroyModelMixin):
         return self.destroy(request, *args, **kwargs)
 
 
-class LoginView(GenericAPIView):
+class Login(GenericAPIView):
     @swagger_auto_schema(request_body=openapi.Schema(
         type=openapi.TYPE_OBJECT,
         properties={

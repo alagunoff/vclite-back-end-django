@@ -1,55 +1,35 @@
-from rest_framework import status
+from rest_framework.generics import GenericAPIView
+from rest_framework.mixins import ListModelMixin, CreateModelMixin, RetrieveModelMixin, DestroyModelMixin
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
+from rest_framework.permissions import IsAuthenticated
 
-from shared.types import HttpRequestMethods
-from shared.utils import check_if_requesting_user_admin, paginate_queryset
+from shared.permissions import IsAdmin
 
 from ..models.author import Author
 from ..serializers.author import Author as AuthorSerializer
 
 
-@api_view([HttpRequestMethods.get.value, HttpRequestMethods.post.value])
-def index(request: Request) -> Response:
-    if check_if_requesting_user_admin(request):
-        if request.method == HttpRequestMethods.get.value:
-            paginator, paginated_authors = paginate_queryset(
-                Author.objects.all(), request)
-            author_serializer = AuthorSerializer(paginated_authors, many=True)
+class Index(GenericAPIView, ListModelMixin, CreateModelMixin):
+    queryset = Author.objects.all()
+    serializer_class = AuthorSerializer
+    permission_classes = [IsAuthenticated, IsAdmin]
 
-            return paginator.get_paginated_response(author_serializer.data)
+    def get(self, request: Request, *args, **kwargs) -> Response:
+        return self.list(request, *args, **kwargs)
 
-        author_serializer = AuthorSerializer(data=request.data)
-        author_serializer.is_valid(raise_exception=True)
-        author_serializer.save()
-
-        return Response(author_serializer.data, status=status.HTTP_201_CREATED)
-
-    return Response(status=status.HTTP_404_NOT_FOUND)
+    def post(self, request: Request, *args, **kwargs) -> Response:
+        return self.create(request, *args, **kwargs)
 
 
-@api_view([HttpRequestMethods.get.value, HttpRequestMethods.patch.value, HttpRequestMethods.delete.value])
-def detail(request: Request, author_id: int) -> Response:
-    if check_if_requesting_user_admin(request):
-        try:
-            author = Author.objects.get(id=author_id)
-        except Author.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+class Detail(GenericAPIView, RetrieveModelMixin, DestroyModelMixin):
+    queryset = Author.objects.all()
+    serializer_class = AuthorSerializer
+    permission_classes = [IsAuthenticated, IsAdmin]
+    lookup_url_kwarg = 'author_id'
 
-        if request.method == HttpRequestMethods.get.value:
-            return Response(AuthorSerializer(author).data)
+    def get(self, request: Request, *args, **kwargs) -> Response:
+        return self.retrieve(request, *args, **kwargs)
 
-        if request.method == HttpRequestMethods.patch.value:
-            author_serializer = AuthorSerializer(
-                author, data=request.data, partial=True)
-            author_serializer.is_valid(raise_exception=True)
-            author_serializer.save()
-
-            return Response(author_serializer.data)
-
-        author.delete()
-
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-    return Response(status=status.HTTP_404_NOT_FOUND)
+    def delete(self, request: Request, *args, **kwargs) -> Response:
+        return self.destroy(request, *args, **kwargs)

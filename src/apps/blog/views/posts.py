@@ -1,60 +1,53 @@
-from rest_framework import status
+from rest_framework.generics import GenericAPIView
+from rest_framework.mixins import ListModelMixin, CreateModelMixin, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
+from rest_framework.permissions import IsAuthenticated
 
 from shared.types import HttpRequestMethods
-from shared.utils import check_if_requesting_user_admin, get_requesting_author, paginate_queryset
+from shared.permissions import IsAuthor, IsAdmin
 
 from ..models.post import Post
 from ..serializers.post import Post as PostSerializer
 from ..utils import filter_posts, sort_posts
 
 
-@api_view([HttpRequestMethods.get.value, HttpRequestMethods.post.value])
-def index(request: Request) -> Response:
-    if request.method == HttpRequestMethods.get.value:
-        posts = Post.objects.filter(is_draft=False)
-        filtered_posts = filter_posts(posts, request.query_params)
-        sorted_posts = sort_posts(filtered_posts, request.query_params)
-        paginator, paginated_posts = paginate_queryset(sorted_posts, request)
-        post_serializer = PostSerializer(paginated_posts, many=True)
+class Index(GenericAPIView, ListModelMixin, CreateModelMixin):
+    serializer_class = PostSerializer
 
-        return paginator.get_paginated_response(post_serializer.data)
+    def get_permissions(self):
+        return [] if self.request.method == HttpRequestMethods.get.value else [IsAuthenticated(), IsAuthor()]
 
-    requesting_author = get_requesting_author(request)
+    def get_queryset(self):
+        return sort_posts(
+            filter_posts(Post.objects.filter(is_draft=False),
+                         self.request.query_params),
+            self.request.query_params
+        )
 
-    if requesting_author:
-        post_serializer = PostSerializer(data=request.data)
-        post_serializer.is_valid(raise_exception=True)
-        post_serializer.save(author_id=requesting_author.id)
+    def get(self, request: Request, *args, **kwargs) -> Response:
+        return self.list(request, *args, **kwargs)
 
-        return Response(post_serializer.data, status=status.HTTP_201_CREATED)
+    def post(self, request: Request, *args, **kwargs) -> Response:
+        return self.create(request, *args, **kwargs)
 
-    return Response({'error': 'only authors can create posts'}, status=status.HTTP_403_FORBIDDEN)
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user.author)
 
 
-@api_view([HttpRequestMethods.get.value, HttpRequestMethods.patch.value, HttpRequestMethods.delete.value])
-def detail(request: Request, post_id: int) -> Response:
-    try:
-        post = Post.objects.get(id=post_id, is_draft=False)
-    except Post.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+class Detail(GenericAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
+    queryset = Post.objects.filter(is_draft=False)
+    serializer_class = PostSerializer
+    lookup_url_kwarg = 'post_id'
 
-    if request.method == HttpRequestMethods.get.value:
-        return Response(PostSerializer(post).data)
+    def get_permissions(self):
+        return [] if self.request.method == HttpRequestMethods.get.value else [IsAuthenticated(), IsAdmin()]
 
-    if check_if_requesting_user_admin(request):
-        if request.method == HttpRequestMethods.patch.value:
-            post_serializer = PostSerializer(
-                post, data=request.data, partial=True)
-            post_serializer.is_valid(raise_exception=True)
-            post_serializer.save()
+    def get(self, request: Request, *args, **kwargs) -> Response:
+        return self.retrieve(request, *args, **kwargs)
 
-            return Response(post_serializer.data)
+    def patch(self, request: Request, *args, **kwargs) -> Response:
+        return self.partial_update(request, *args, **kwargs)
 
-        post.delete()
-
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-    return Response(status=status.HTTP_404_NOT_FOUND)
+    def delete(self, request: Request, *args, **kwargs) -> Response:
+        return self.destroy(request, *args, **kwargs)

@@ -1,57 +1,49 @@
-from rest_framework import status
+from rest_framework.generics import GenericAPIView, get_object_or_404
+from rest_framework.mixins import ListModelMixin, CreateModelMixin, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
+from rest_framework.permissions import IsAuthenticated
 
 from shared.types import HttpRequestMethods
-from shared.utils import get_requesting_author, paginate_queryset
+from shared.permissions import IsAuthor
 
 from ..models.post import Post
 from ..serializers.post import Post as PostSerializer
 
 
-@api_view([HttpRequestMethods.get.value, HttpRequestMethods.post.value])
-def index(request: Request) -> Response:
-    requesting_author = get_requesting_author(request)
+class Index(GenericAPIView, ListModelMixin, CreateModelMixin):
+    serializer_class = PostSerializer
 
-    if request.method == HttpRequestMethods.get.value:
-        paginator, paginated_drafts = paginate_queryset(Post.objects.filter(
-            author=requesting_author, is_draft=True), request)
-        post_serializer = PostSerializer(paginated_drafts, many=True)
+    def get_permissions(self):
+        return [] if self.request.method == HttpRequestMethods.get.value else [IsAuthenticated(), IsAuthor()]
 
-        return paginator.get_paginated_response(post_serializer.data)
+    def get_queryset(self):
+        return Post.objects.filter(author=getattr(self.request.user, 'author', None), is_draft=True)
 
-    if requesting_author:
-        post_serializer = PostSerializer(data=request.data)
-        post_serializer.is_valid(raise_exception=True)
-        post_serializer.save(author=requesting_author)
+    def get(self, request: Request, *args, **kwargs) -> Response:
+        return self.list(request, *args, **kwargs)
 
-        return Response(post_serializer.data, status=status.HTTP_201_CREATED)
+    def post(self, request: Request, *args, **kwargs) -> Response:
+        return self.create(request, *args, **kwargs)
 
-    return Response({'error': 'only authors can create drafts'}, status=status.HTTP_403_FORBIDDEN)
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user.author)
 
 
-@api_view([HttpRequestMethods.get.value, HttpRequestMethods.patch.value, HttpRequestMethods.delete.value])
-def detail(request: Request, draft_id: int) -> Response:
-    requesting_author = get_requesting_author(request)
+class Detail(GenericAPIView, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin):
+    serializer_class = PostSerializer
 
-    try:
-        draft = Post.objects.get(
-            id=draft_id, author=requesting_author, is_draft=True)
-    except Post.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+    def get_permissions(self):
+        return [] if self.request.method == HttpRequestMethods.get.value else [IsAuthenticated()]
 
-    if request.method == HttpRequestMethods.get.value:
-        return Response(PostSerializer(draft).data)
+    def get_object(self):
+        return get_object_or_404(Post, id=self.kwargs['draft_id'], author=getattr(self.request.user, 'author', None), is_draft=True)
 
-    if request.method == HttpRequestMethods.patch.value:
-        post_serializer = PostSerializer(
-            draft, data=request.data, partial=True)
-        post_serializer.is_valid(raise_exception=True)
-        post_serializer.save()
+    def get(self, request: Request, *args, **kwargs) -> Response:
+        return self.retrieve(request, *args, **kwargs)
 
-        return Response(post_serializer.data)
+    def patch(self, request: Request, *args, **kwargs) -> Response:
+        return self.partial_update(request, *args, **kwargs)
 
-    draft.delete()
-
-    return Response(status=status.HTTP_204_NO_CONTENT)
+    def delete(self, request: Request, *args, **kwargs) -> Response:
+        return self.destroy(request, *args, **kwargs)

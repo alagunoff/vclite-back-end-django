@@ -7,8 +7,6 @@ from .constants import DEFAULT_USER_BASE64_AVATAR
 
 class UserManager(BaseUserManager):
     def create_user(self, **kwargs) -> 'User':
-        del kwargs['password']
-
         user: User = self.model(**kwargs)
         user.set_password(kwargs.get('password'))
         user.save(using=self.db)
