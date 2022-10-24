@@ -5,7 +5,6 @@ from rest_framework.mixins import CreateModelMixin, DestroyModelMixin
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.authtoken.models import Token
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 
@@ -57,6 +56,6 @@ class Login(GenericAPIView):
             'username'), password=request.data.get('password'))
 
         if authenticated_user:
-            return Response(Token.objects.get(user=authenticated_user).key)
+            return Response(authenticated_user.auth_token.key)
 
         return Response({'error': 'invalid credentials'}, status=HTTP_400_BAD_REQUEST)

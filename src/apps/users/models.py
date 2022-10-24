@@ -10,7 +10,6 @@ class UserManager(BaseUserManager):
         user: User = self.model(**kwargs)
         user.set_password(kwargs.get('password'))
         user.save(using=self.db)
-
         Token.objects.create(user=user)
 
         return user
