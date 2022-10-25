@@ -14,7 +14,7 @@ services:
     env_file: .env.local
     ports:
       - 5050:80
-  web:
+  server:
     build: .
     env_file: .env.local
     command: python src/manage.py runserver 0.0.0.0:8000

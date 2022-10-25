@@ -42,6 +42,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['first_name']
 
+    class Meta:
+        db_table = 'users'
+
     @property
     def is_staff(self) -> bool:
         return self.is_admin

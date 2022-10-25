@@ -42,8 +42,12 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'drf_yasg',
 
-    'apps.users.apps.UsersConfig',
-    'apps.blog.apps.BlogConfig'
+    'apps.authors.apps.AuthorsConfig',
+    'apps.categories.apps.CategoriesConfig',
+    'apps.comments.apps.CommentsConfig',
+    'apps.posts.apps.PostsConfig',
+    'apps.tags.apps.TagsConfig',
+    'apps.users.apps.UsersConfig'
 ]
 
 
