@@ -4,7 +4,7 @@ from apps.authors.models import Author
 from apps.users.models import User
 
 
-class TagModelTestCase(APITestCase):
+class ModelTestCase(APITestCase):
     @classmethod
     def setUpTestData(cls):
         artem = User.objects.create_superuser(

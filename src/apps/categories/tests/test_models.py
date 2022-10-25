@@ -3,7 +3,7 @@ from rest_framework.test import APITestCase
 from apps.categories.models import Category
 
 
-class TagModelTestCase(APITestCase):
+class ModelTestCase(APITestCase):
     @classmethod
     def setUpTestData(cls):
         Category.objects.create(category='sports')

@@ -3,7 +3,7 @@ from rest_framework.test import APITestCase
 from apps.tags.models import Tag
 
 
-class TagModelTestCase(APITestCase):
+class ModelTestCase(APITestCase):
     @classmethod
     def setUpTestData(cls):
         Tag.objects.create(tag='2022')
