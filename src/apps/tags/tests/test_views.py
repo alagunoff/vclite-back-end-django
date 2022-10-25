@@ -54,20 +54,20 @@ class DetailViewTestCase(APITestCase):
             HTTP_AUTHORIZATION=f'Token {User.objects.get(username="artem").auth_token.key}')
 
     def test_get_method_with_200_response(self):
-        tag_2022_id = Tag.objects.get(tag='2022').id
-        response = self.client.get(f'/tags/{tag_2022_id}')
+        first_tag_id = Tag.objects.first().id
+        response = self.client.get(f'/tags/{first_tag_id}')
 
         self.assertEqual(response.status_code, HTTP_200_OK)
 
     def test_put_method_with_200_response(self):
-        tag_2022_id = Tag.objects.get(tag='2022').id
+        first_tag_id = Tag.objects.first().id
         response = self.client.put(
-            f'/tags/{tag_2022_id}', json.dumps({'tag': '2023'}), content_type='application/json')
+            f'/tags/{first_tag_id}', json.dumps({'tag': '2023'}), content_type='application/json')
 
         self.assertEqual(response.status_code, HTTP_200_OK)
 
     def test_delete_method_with_204_response(self):
-        tag_2022_id = Tag.objects.get(tag='2022').id
-        response = self.client.delete(f'/tags/{tag_2022_id}')
+        first_tag_id = Tag.objects.first().id
+        response = self.client.delete(f'/tags/{first_tag_id}')
 
         self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)

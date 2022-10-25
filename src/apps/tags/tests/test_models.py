@@ -9,11 +9,11 @@ class TagModelTestCase(APITestCase):
         Tag.objects.create(tag='2022')
 
     def test_str(self):
-        tag = Tag.objects.get(tag='2022')
+        first_tag = Tag.objects.first()
 
-        self.assertEqual(str(tag), tag.tag)
+        self.assertEqual(str(first_tag), first_tag.tag)
 
     def test_tag_max_length(self):
-        tag = Tag.objects.get(tag='2022')
+        first_tag = Tag.objects.first()
 
-        self.assertEqual(tag._meta.get_field('tag').max_length, 30)
+        self.assertEqual(first_tag._meta.get_field('tag').max_length, 30)
