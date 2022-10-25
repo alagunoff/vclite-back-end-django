@@ -9,12 +9,10 @@ urlpatterns = [
         openapi.Info(title='Vclite API', default_version='v1'),
         public=True,
     ).with_ui('swagger', cache_timeout=0)),
-    path('blog', include([
-        path('/authors', include('apps.authors.urls')),
-        path('/categories', include('apps.categories.urls')),
-        path('/drafts', include('apps.drafts.urls')),
-        path('/posts', include('apps.posts.urls')),
-        path('/tags', include('apps.tags.urls')),
-    ])),
+    path('authors', include('apps.authors.urls')),
+    path('categories', include('apps.categories.urls')),
+    path('drafts', include('apps.drafts.urls')),
+    path('posts', include('apps.posts.urls')),
+    path('tags', include('apps.tags.urls')),
     path('users', include('apps.users.urls')),
 ]
