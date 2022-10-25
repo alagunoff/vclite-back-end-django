@@ -3,7 +3,7 @@ from rest_framework.test import APITestCase
 from apps.users.models import User
 
 
-class UserModelTest(APITestCase):
+class UserModelTestCase(APITestCase):
     @classmethod
     def setUpTestData(cls):
         User.objects.create_superuser(

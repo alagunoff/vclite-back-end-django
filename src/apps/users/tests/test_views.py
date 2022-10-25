@@ -9,7 +9,7 @@ from rest_framework.status import \
 from apps.users.models import User
 
 
-class UserIndexViewTest(APITestCase):
+class IndexViewTestCase(APITestCase):
     @classmethod
     def setUpTestData(cls):
         User.objects.create_user(
@@ -43,7 +43,7 @@ class UserIndexViewTest(APITestCase):
         self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
 
 
-class UserDetailViewTest(APITestCase):
+class DetailViewTestCase(APITestCase):
     @classmethod
     def setUpTestData(cls):
         User.objects.create_superuser(
@@ -74,7 +74,7 @@ class UserDetailViewTest(APITestCase):
         self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
 
 
-class UserLoginViewTest(APITestCase):
+class LoginViewTestCase(APITestCase):
     @classmethod
     def setUpTestData(cls):
         User.objects.create_superuser(
