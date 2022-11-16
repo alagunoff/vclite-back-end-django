@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import BaseUserManager, AbstractBaseUser, PermissionsMixin
 from rest_framework.authtoken.models import Token
 
-from .constants import DEFAULT_USER_BASE64_AVATAR
+from .utils import get_user_avatar_path
 
 
 class UserManager(BaseUserManager):
@@ -32,8 +32,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(max_length=30)
     last_name = models.CharField(
         max_length=30, blank=True, null=True)
-    avatar = models.CharField(
-        max_length=900000, default=DEFAULT_USER_BASE64_AVATAR)
+    avatar = models.ImageField(
+        upload_to=get_user_avatar_path, blank=True, default='users/placeholder-avatar.png')
     creation_date = models.DateTimeField(auto_now_add=True)
     is_admin = models.BooleanField(default=False)
 
