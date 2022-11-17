@@ -28,7 +28,8 @@ class Index(GenericAPIView, ListModelMixin, CreateModelMixin):
         return self.create(request, *args, **kwargs)
 
     def perform_create(self, serializer):
-        serializer.save(post_id=self.kwargs['post_id'])
+        serializer.save(author=self.request.user,
+                        post_id=self.kwargs['post_id'])
 
     def delete(self, request: Request, *args, **kwargs) -> Response:
         self.get_queryset().delete()
