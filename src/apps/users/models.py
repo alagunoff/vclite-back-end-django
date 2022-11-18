@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import BaseUserManager, AbstractBaseUser, PermissionsMixin
+from django.utils.safestring import mark_safe
 from rest_framework.authtoken.models import Token
 
 from .utils import get_user_avatar_path
@@ -48,3 +49,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     @property
     def is_staff(self) -> bool:
         return self.is_admin
+
+    @property
+    def avatar_preview(self) -> str:
+        return mark_safe(f'<img src="{self.avatar.url}" width="100" />') if self.avatar else ''
