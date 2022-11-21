@@ -11,7 +11,7 @@ defusedxml==0.7.1
 dill==0.3.5.1
 dj-rest-auth==2.2.5
 Django==4.1.1
-django-allauth==0.51.0
+django-allauth==0.50.0
 django-otp==1.1.4
 djangorestframework==3.14.0
 drf-yasg==1.21.4

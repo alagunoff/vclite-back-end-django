@@ -18,6 +18,7 @@ urlpatterns = [
          default_version='v1'), public=True).with_ui('swagger', cache_timeout=0)),
     path('accounts/', include('allauth.urls')),
     path('dj-rest-auth/', include('dj_rest_auth.urls')),
+    path('dj-rest-auth/registration/', include('dj_rest_auth.registration.urls')),
     path('dj-rest-auth/google/', GoogleLogin.as_view(), name='google_login'),
     path('login/google', TemplateView.as_view(template_name='google-login.html')),
     path('authors', include('apps.authors.urls')),

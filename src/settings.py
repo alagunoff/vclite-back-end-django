@@ -72,8 +72,8 @@ SOCIALACCOUNT_PROVIDERS = {
             'secret': os.getenv('GOOGLE_CLIENT_SECRET'),
             'key': ''
         },
-        "AUTH_PARAMS": {
-            "access_type": "online",
+        'AUTH_PARAMS': {
+            'access_type': 'online',
         }
     }
 }
