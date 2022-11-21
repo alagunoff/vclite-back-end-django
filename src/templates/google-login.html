@@ -1,0 +1,13 @@
+<html>
+
+<body>
+    {% if user.is_authenticated %}
+    <p>Welcome, You are logged in as {{ user.username }}</p>
+    {% else %}
+    <a
+        href="https://accounts.google.com/o/oauth2/v2/auth?redirect_uri=http://127.0.0.1:8000/accounts/google/login/callback/&prompt=consent&response_type=code&client_id=933518753995-2slljvkjin3sh9quvfrpucnucmh7l3df.apps.googleusercontent.com&scope=openid%20email&access_type=offline">Login
+        With Google</a>
+    {% endif %}
+</body>
+
+</html>
